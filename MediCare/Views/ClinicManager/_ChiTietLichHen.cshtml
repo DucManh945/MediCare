@@ -1,0 +1,34 @@
+@model MediCare.Models.AppointmentItemViewModel
+@{
+    ViewBag.Title = "Chi tiết lịch hẹn";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    ViewBag.ActiveManagerMenu = "appointments";
+}
+@section SidebarNav {
+    @Html.Partial("_ClinicManagerSidebar")
+}
+<div class="appointment-detail-page">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <div><h2 class="mb-1">Chi tiết lịch hẹn #@Model.MaLichHen</h2><div class="text-muted">Thông tin được lấy từ cơ sở dữ liệu</div></div>
+        <a class="btn btn-outline-secondary" href="@Url.Action("LichHen", "ClinicManager")"><i class="fas fa-arrow-left me-1"></i>Quay lại danh sách</a>
+    </div>
+    <div class="row g-4">
+        <div class="col-12 col-lg-7">
+            <div class="card detail-card h-100"><div class="card-header"><i class="fas fa-calendar-check me-2"></i>Thông tin lịch hẹn</div><div class="card-body">
+                <dl class="row mb-0"><dt class="col-sm-5">Mã lịch hẹn</dt><dd class="col-sm-7">#@Model.MaLichHen</dd><dt class="col-sm-5">Ngày khám</dt><dd class="col-sm-7">@Model.NgayKham.ToString("dd/MM/yyyy")</dd><dt class="col-sm-5">Giờ khám</dt><dd class="col-sm-7">@Model.GioKham</dd><dt class="col-sm-5">Số thứ tự</dt><dd class="col-sm-7">@(Model.SoThuTu?.ToString() ?? "-")</dd><dt class="col-sm-5">Trạng thái</dt><dd class="col-sm-7"><span class="badge bg-primary">@Model.TrangThai</span></dd><dt class="col-sm-5">Lý do khám</dt><dd class="col-sm-7">@(Model.LyDoKham ?? "Chưa cập nhật")</dd></dl>
+            </div></div>
+        </div>
+        <div class="col-12 col-lg-5">
+            <div class="card detail-card h-100"><div class="card-header"><i class="fas fa-user-injured me-2"></i>Thông tin bệnh nhân</div><div class="card-body">
+                <dl class="row mb-0"><dt class="col-sm-5">Mã bệnh nhân</dt><dd class="col-sm-7">#@Model.BenhNhanId</dd><dt class="col-sm-5">Họ tên</dt><dd class="col-sm-7">@Model.BenhNhanName</dd><dt class="col-sm-5">Điện thoại</dt><dd class="col-sm-7">@(Model.BenhNhanPhone ?? "Chưa cập nhật")</dd></dl>
+            </div></div>
+        </div>
+        <div class="col-12"><div class="card detail-card"><div class="card-header"><i class="fas fa-user-doctor me-2"></i>Bác sĩ phụ trách</div><div class="card-body"><dl class="row mb-0"><dt class="col-sm-3">Bác sĩ</dt><dd class="col-sm-9">@(Model.BacSiName ?? "Chưa phân công")</dd></dl></div></div></div>
+    </div>
+</div>
+<style>
+    .appointment-detail-page .detail-card { border: 0; box-shadow: 0 4px 14px rgba(15, 23, 42, .06); }
+    .appointment-detail-page .card-header { background: #fff; font-weight: 600; color: #1e293b; }
+    .appointment-detail-page dt { color: #64748b; font-weight: 500; margin-bottom: .85rem; }
+    .appointment-detail-page dd { color: #1e293b; margin-bottom: .85rem; }
+</style>

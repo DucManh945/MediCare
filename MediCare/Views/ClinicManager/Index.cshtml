@@ -1,0 +1,192 @@
+@model MediCare.Models.ClinicManagerDashboardViewModel
+@using System.Linq
+@{
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarNav {
+    @Html.Partial("_ClinicManagerSidebar")
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.DatabaseWarning))
+{
+    <div class="alert alert-warning">@Model.DatabaseWarning</div>
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-box">
+            <div class="stat-box-icon blue">
+                <i class="fas fa-user-doctor"></i>
+            </div>
+            <div>
+                <span class="stat-box-number">@Model.ActiveDoctorCount</span>
+                <span class="stat-box-label">Bác sĩ đang làm việc</span>
+                <span class="stat-box-change up">Dữ liệu hiện tại</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-box">
+            <div class="stat-box-icon green">
+                <i class="fas fa-user-injured"></i>
+            </div>
+            <div>
+                <span class="stat-box-number">@Model.PatientCount</span>
+                <span class="stat-box-label">Bệnh nhân đang hoạt động</span>
+                <span class="stat-box-change up">Vai trò bệnh nhân</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-box">
+            <div class="stat-box-icon orange">
+                <i class="fas fa-pills"></i>
+            </div>
+            <div>
+                <span class="stat-box-number">@Model.MedicineCount</span>
+                <span class="stat-box-label">Thuốc trong kho</span>
+                <span class="stat-box-change down">
+                    <i class="fas fa-triangle-exclamation me-1"></i>@Model.LowStockMedicineCount sắp hết
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-box">
+            <div class="stat-box-icon purple">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div>
+                <span class="stat-box-number">@Model.MonthlyRevenue.ToString("N0")</span>
+                <span class="stat-box-label">Doanh thu tháng (đ)</span>
+                    <span class="stat-box-change @(Model.HasMonthlyRevenue ? "up" : "down")">@(Model.HasMonthlyRevenue ? "Đã thanh toán" : "Chưa có dữ liệu")</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <h3 class="dash-card-title">
+                    <i class="fas fa-calendar-list"></i>
+                    Lịch hẹn hôm nay (@Model.TodayAppointments.Count)
+                </h3>
+                <div class="d-flex gap-2">
+                    <button class="btn-dash btn-dash-outline" type="button">
+                        <i class="fas fa-calendar"></i> Hôm nay, @Model.Today.ToString("dd/MM")
+                    </button>
+                    <a href="@Url.Action("LichHen", "ClinicManager")" class="btn-dash btn-dash-secondary">
+                        <i class="fas fa-eye"></i> Xem tất cả
+                    </a>
+                </div>
+            </div>
+            <div class="dash-card-body p-0">
+                <div class="table-responsive">
+                    <table class="dash-table">
+                        <thead>
+                            <tr>
+                                <th>Giờ</th>
+                                <th>Bệnh nhân</th>
+                                <th>Dịch vụ</th>
+                                <th>Bác sĩ</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.TodayAppointments.Any())
+                            {
+                                foreach (var item in Model.TodayAppointments)
+                                {
+                                    <tr>
+                                        <td><strong>@item.Time.ToString(@"hh\:mm")</strong></td>
+                                        <td>@item.PatientName</td>
+                                        <td>@item.ServiceName</td>
+                                        <td>@item.DoctorName</td>
+                                        <td><span class="badge-pill badge-primary">@item.Status</span></td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">Không có lịch hẹn hôm nay.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="dash-card mb-4">
+            <div class="dash-card-header">
+                <h3 class="dash-card-title">
+                    <i class="fas fa-triangle-exclamation" style="color:var(--mc-warning);"></i>
+                    Thuốc sắp hết hạn
+                </h3>
+                <a href="@Url.Action("QuanLyThuoc", "ClinicManager", new { expiryStatus = "soon" })" class="btn-dash btn-dash-outline">Xem tất cả</a>
+            </div>
+            <div class="dash-card-body p-0">
+                @if (Model.ExpiringMedicines.Any(x => x.ExpiryDate.HasValue && x.ExpiryDate.Value.Date >= Model.Today))
+                {
+                    foreach (var item in Model.ExpiringMedicines.Where(x => x.ExpiryDate.HasValue && x.ExpiryDate.Value.Date >= Model.Today))
+                    {
+                        <div style="padding:1rem;border-bottom:1px solid var(--mc-border);">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span style="font-weight:600;">@item.Name</span>
+                                <span class="badge-pill badge-warning">@item.ExpiryDate.Value.ToString("dd/MM/yyyy")</span>
+                            </div>
+                            <div style="font-size:.82rem;color:var(--mc-gray);">Còn @item.Quantity @item.Unit / @item.LotNumber
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="p-3 text-muted">Không có dữ liệu thuốc sắp hết hạn.</div>
+                }
+            </div>
+        </div>
+
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <h3 class="dash-card-title">
+                    <i class="fas fa-chart-simple" style="color:var(--mc-secondary);"></i>
+                    Doanh thu 7 ngày
+                </h3>
+                <a href="@Url.Action("DoanhThu", "ClinicManager")" class="btn-dash btn-dash-outline">Chi tiết</a>
+            </div>
+            <div class="dash-card-body">
+                @if (!Model.HasWeeklyRevenue)
+                {
+                    <div class="p-3 text-muted">Chưa có dữ liệu doanh thu trong 7 ngày gần nhất.</div>
+                }
+                else
+                {
+                    <div class="mb-2" style="font-weight:600;color:var(--mc-primary);">
+                        @Model.WeeklyRevenue.Sum(x => x.Amount).ToString("N0") đ
+                    </div>
+                    <div style="display:flex;align-items:flex-end;gap:.5rem;height:140px;">
+                    @{
+                        var maxRevenue = Model.WeeklyRevenue.Any() ? Model.WeeklyRevenue.Max(x => x.Amount) : 0;
+                    }
+                    @foreach (var item in Model.WeeklyRevenue)
+                    {
+                        var height = maxRevenue == 0 ? 0 : (int)Math.Max(4, item.Amount / maxRevenue * 100);
+                        <div style="flex:1;text-align:center;">
+                            <div title="@item.Amount.ToString("N0") đ" style="width:100%;height:@height%;background:linear-gradient(180deg,var(--mc-primary),var(--mc-secondary));border-radius:8px 8px 0 0;"></div>
+                            <div style="font-size:.75rem;color:var(--mc-gray);margin-top:.4rem;font-weight:600;">@item.DayLabel
+                            </div>
+                        </div>
+                    }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

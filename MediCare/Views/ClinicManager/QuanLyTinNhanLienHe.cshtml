@@ -1,0 +1,118 @@
+@model List<MediCare.Models.ContactMessageViewModel>
+@{
+    ViewBag.Title = "Tiếp nhận & Xử lý Tin nhắn Liên hệ";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    ViewBag.ActiveManagerMenu = "contacts";
+}
+
+@section SidebarNav {
+    @Html.Partial("_ClinicManagerSidebar")
+}
+
+<div class="container-fluid py-2">
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4"><i class="fas fa-circle-check me-2"></i>@TempData["Message"]</div>
+    }
+    @if (TempData["Error"] != null || ViewBag.Error != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-4"><i class="fas fa-triangle-exclamation me-2"></i>@(TempData["Error"] ?? ViewBag.Error)</div>
+    }
+
+    <div class="dash-card">
+        <div class="dash-card-header d-flex justify-content-between align-items-center">
+            <h3 class="dash-card-title mb-0">
+                <i class="fas fa-envelope-open-text text-primary me-2"></i>
+                Danh sách Tin nhắn Liên hệ Từ Bệnh nhân & Khách hàng
+            </h3>
+        </div>
+
+        <div class="dash-card-body p-0">
+            <div class="table-responsive">
+                <table class="dash-table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Mã TN</th>
+                            <th>Khách hàng</th>
+                            <th>Liên hệ</th>
+                            <th>Tiêu đề & Nội dung</th>
+                            <th>Thời gian</th>
+                            <th class="text-center">Trạng thái</th>
+                            <th class="text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Count > 0)
+                        {
+                            foreach (var msg in Model)
+                            {
+                                <tr>
+                                    <td><strong class="text-primary">#TN-@msg.MaTinNhan</strong></td>
+                                    <td><strong>@msg.HoTen</strong></td>
+                                    <td class="small">
+                                        <div><i class="fas fa-envelope text-muted me-1"></i>@msg.Email</div>
+                                        <div><i class="fas fa-phone text-muted me-1"></i>@msg.SoDienThoai</div>
+                                    </td>
+                                    <td>
+                                        <strong class="text-dark d-block">@msg.TieuDe</strong>
+                                        <span class="small text-muted">@msg.NoiDung</span>
+                                        @if (!string.IsNullOrEmpty(msg.GhiChuXuLy))
+                                        {
+                                            <div class="small text-success mt-1"><i class="fas fa-comment-dots me-1"></i>Ghi chú: @msg.GhiChuXuLy</div>
+                                        }
+                                    </td>
+                                    <td class="small">@msg.NgayGui.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td class="text-center">
+                                        <span class="badge-pill @(msg.TrangThai == "Đã xử lý" ? "badge-success" : "badge-warning")">
+                                            @msg.TrangThai
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#replyModal@(msg.MaTinNhan)" title="Xử lý tin nhắn">
+                                            <i class="fas fa-check-double me-1"></i>Xử lý
+                                        </button>
+
+                                        <!-- Modal Xử lý Tin nhắn -->
+                                        <div class="modal fade text-start" id="replyModal@(msg.MaTinNhan)" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    @using (Html.BeginForm("CapNhatTinNhanLienHe", "ClinicManager", FormMethod.Post))
+                                                    {
+                                                        @Html.AntiForgeryToken()
+                                                        @Html.Hidden("id", msg.MaTinNhan)
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Cập nhật xử lý tin nhắn #TN-@msg.MaTinNhan</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p class="mb-2"><strong>Từ:</strong> @msg.HoTen (@msg.SoDienThoai - @msg.Email)</p>
+                                                            <p class="mb-3"><strong>Nội dung:</strong> @msg.NoiDung</p>
+                                                            <div class="mb-3">
+                                                                <label class="form-label font-weight-semibold">Ghi chú xử lý / Phản hồi:</label>
+                                                                <textarea name="note" class="form-control" rows="3" placeholder="Nhập kết quả liên hệ/xử lý...">@msg.GhiChuXuLy</textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+                                                            <button type="submit" class="btn btn-success btn-sm fw-bold">Xác nhận Đã xử lý</button>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">Chưa có tin nhắn liên hệ nào từ bệnh nhân hoặc khách hàng.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

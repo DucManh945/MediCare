@@ -1,0 +1,14 @@
+@model MediCare.Models.UserItemViewModel
+<div class="row g-3">
+    <div class="col-md-6"><strong>Mã tài khoản:</strong> @Model.UserId</div>
+    <div class="col-md-6"><strong>Trạng thái:</strong> @(Model.IsActive ? "Đang hoạt động" : "Đã khóa")</div>
+    <div class="col-md-6"><strong>Họ tên:</strong> @Model.FullName</div>
+    <div class="col-md-6"><strong>Tên đăng nhập:</strong> @Model.Username</div>
+    <div class="col-md-6"><strong>Email:</strong> @(Model.Email ?? "-")</div>
+    <div class="col-md-6"><strong>Số điện thoại:</strong> @(Model.Phone ?? "-")</div>
+    <div class="col-md-6"><strong>Vai trò:</strong> @Model.RoleName</div>
+    <div class="col-md-6"><strong>Khoa:</strong> @(Model.KhoaName ?? "-")</div>
+    <div class="col-md-6"><strong>Giới tính:</strong> @(Model.Gender ?? "-")</div>
+    <div class="col-md-6"><strong>Ngày sinh:</strong> @(Model.BirthDate.HasValue ? Model.BirthDate.Value.ToString("dd/MM/yyyy") : "-")</div>
+    <div class="col-12"><strong>Địa chỉ:</strong> @(Model.Address ?? "-")</div>
+</div>

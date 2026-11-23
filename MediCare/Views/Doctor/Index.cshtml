@@ -1,0 +1,176 @@
+@model MediCare.Models.DoctorDashboardViewModel
+@using System.Linq
+@{ 
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml"; 
+}
+
+@section SidebarNav {
+    @Html.Partial("~/Views/Shared/_DoctorSidebar.cshtml")
+}
+
+@if (ViewBag.DatabaseError != null) { 
+    <div class="alert alert-warning">@ViewBag.DatabaseError</div> 
+}
+
+<!-- Quick Action Banner -->
+<div class="dash-card mb-4" style="background:linear-gradient(135deg,#0ea5e9 0%,#0284c7 100%);color:#fff;padding:1.5rem;border-radius:var(--mc-radius);">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div>
+            <h4 class="mb-1 text-white">Xin chào, @(Model.DoctorName ?? User.Identity.Name)</h4>
+            <p class="mb-0 text-white-50 small">Dữ liệu lịch khám ngày @Model.Today.ToString("dd/MM/yyyy")</p>
+        </div>
+        <a href="@Url.Action("LichHen")" class="btn btn-light btn-sm text-primary">
+            <i class="fas fa-calendar-check me-1"></i>Xem lịch khám
+        </a>
+    </div>
+</div>
+
+<!-- Stat Boxes -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-box">
+            <div class="stat-box-icon blue">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div>
+                <span class="stat-box-number">@Model.TodayAppointments</span>
+                <span class="stat-box-label">Lịch hẹn hôm nay</span>
+                <span class="stat-box-change up">Dữ liệu thực tế</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-box">
+            <div class="stat-box-icon purple">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
+            <div>
+                <span class="stat-box-number">@Model.WaitingAppointments</span>
+                <span class="stat-box-label">Chờ khám</span>
+                <span class="stat-box-change down">Trạng thái Đã đặt</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-box">
+            <div class="stat-box-icon green">
+                <i class="fas fa-circle-check"></i>
+            </div>
+            <div>
+                <span class="stat-box-number">@Model.CompletedAppointments</span>
+                <span class="stat-box-label">Đã khám</span>
+                <span class="stat-box-change up">Trạng thái Đã khám</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-box">
+            <div class="stat-box-icon red">
+                <i class="fas fa-user-xmark"></i>
+            </div>
+            <div>
+                <span class="stat-box-number">@Model.CancelledAppointments</span>
+                <span class="stat-box-label">Đã hủy</span>
+                <span class="stat-box-change down">Trạng thái Hủy</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left: Patient Queue Monitor -->
+    <div class="col-lg-8">
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <h3 class="dash-card-title">
+                    <i class="fas fa-list-ol"></i>
+                    Lịch hẹn sắp tới hôm nay
+                </h3>
+                <a href="@Url.Action("LichHen")" class="btn-dash btn-dash-outline">
+                    Xem tất cả
+                </a>
+            </div>
+            <div class="dash-card-body p-0">
+                <div class="table-responsive">
+                    <table class="dash-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Giờ</th>
+                                <th>Bệnh nhân</th>
+                                <th>Lý do khám</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.UpcomingAppointments.Any()) { 
+                                foreach (var item in Model.UpcomingAppointments) { 
+                                    <tr>
+                                        <td>@(item.SoThuTu.HasValue ? item.SoThuTu.ToString() : "—")</td>
+                                        <td><strong>@item.GioKham.ToString(@"hh\:mm")</strong></td>
+                                        <td>@item.BenhNhanName</td>
+                                        <td>@(item.LyDoKham ?? "—")</td>
+                                        <td><span class="badge-pill badge-primary">@item.TrangThai</span></td>
+                                        <td>
+                                            <a class="btn-dash btn-dash-primary" href="@Url.Action("KhamBenh", "Doctor", new { appointmentId = item.MaLichHen })">
+                                                <i class="fas fa-stethoscope"></i> Khám
+                                            </a>
+                                        </td>
+                                    </tr> 
+                                } 
+                            } else { 
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">Không có lịch hẹn hôm nay.</td>
+                                </tr> 
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Notifications & Lab Result Feed -->
+    <div class="col-lg-4">
+        <!-- Lab Results Returned Alert Box -->
+        <div class="dash-card mb-4">
+            <div class="dash-card-header d-flex justify-content-between align-items-center">
+                <h3 class="dash-card-title mb-0">
+                    <i class="fas fa-file-prescription text-warning me-2"></i>
+                    Kết quả CLS
+                </h3>
+                <span class="badge bg-secondary rounded-pill">Theo phiếu khám</span>
+            </div>
+            <div class="dash-card-body p-0">
+                <div class="p-3 text-muted">Mở một phiếu khám cụ thể để xem hoặc tạo chỉ định CLS.</div>
+            </div>
+        </div>
+
+        <!-- Medical Utilities Card -->
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <h3 class="dash-card-title mb-0">
+                    <i class="fas fa-toolbox text-primary me-2"></i>
+                    Tiện ích Y khoa nhanh
+                </h3>
+            </div>
+            <div class="dash-card-body">
+                <div class="d-grid gap-2">
+                    <a href="@Url.Action("LichHen", "Doctor")" class="btn btn-outline-primary text-start">
+                        <i class="fas fa-file-pen me-2"></i> Mở Phiếu khám bệnh SOAP
+                    </a>
+                    <a href="@Url.Action("PhieuKham", "Doctor", new { destination = "ChiDinhCLS" })" class="btn btn-outline-info text-start">
+                        <i class="fas fa-microscope me-2"></i> Chỉ định XN / CĐHA nhanh
+                    </a>
+                    <a href="@Url.Action("PhieuKham", "Doctor", new { destination = "KeDonThuoc" })" class="btn btn-outline-success text-start">
+                        <i class="fas fa-pills me-2"></i> Tra cứu danh mục thuốc & kê đơn
+                    </a>
+                    <a href="@Url.Action("HoSoBenhAn", "Doctor")" class="btn btn-outline-purple text-start" style="border-color:#8b5cf6; color:#7c3aed;">
+                        <i class="fas fa-folder-open me-2"></i> Tra cứu Bệnh án Điện tử (EMR)
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

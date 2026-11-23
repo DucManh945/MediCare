@@ -1,0 +1,47 @@
+@{
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarNav {
+    @Html.Partial("~/Views/Shared/_AdminSidebar.cshtml")
+}
+
+<!-- API & Integration Card -->
+<div class="dash-card">
+    <div class="dash-card-header">
+        <h3 class="dash-card-title mb-0">
+            <i class="fas fa-circle-nodes text-primary me-2"></i>
+            Cấu hình Kết nối & API Tích hợp (API & Webhook Endpoints)
+        </h3>
+    </div>
+
+    <div class="dash-card-body">
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="p-3 border rounded bg-light">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong class="text-dark"><i class="fas fa-qrcode text-success me-2"></i>VietQR / SePay Payment Webhook</strong>
+                        <span class="badge bg-secondary">Kế hoạch (chưa triển khai)</span>
+                    </div>
+                    <div class="small text-muted mb-2">Endpoint dự kiến nhận thông báo giao dịch chuyển khoản tự động (hiện chưa có controller/route, thanh toán được xác nhận thủ công trên trang Hóa đơn):</div>
+                    <code class="d-block p-2 bg-white rounded border text-primary">/Api/PaymentWebhook</code>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="p-3 border rounded bg-light">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong class="text-dark"><i class="fas fa-notes-medical text-primary me-2"></i>Cổng BHYT / Giám định Y tế</strong>
+                        <span class="badge bg-info">Khả dụng</span>
+                    </div>
+                    <div class="small text-muted mb-2">Mã cơ sở KCB kết nối giám định:</div>
+                    <code class="d-block p-2 bg-white rounded border text-dark">79-021 (MediCare)</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info py-2 small mb-0">
+            <i class="fas fa-circle-info me-2"></i> Hệ thống hỗ trợ tích hợp Webhook tự động cập nhật trạng thái hóa đơn VietQR ngân hàng.
+        </div>
+    </div>
+</div>

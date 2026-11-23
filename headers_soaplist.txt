@@ -1,0 +1,12 @@
+HTTP/1.1 200 OK
+Cache-Control: private, s-maxage=0
+Content-Type: text/html; charset=utf-8
+Server: Microsoft-IIS/10.0
+X-AspNetMvc-Version: 5.2
+X-Frame-Options: SAMEORIGIN
+X-AspNet-Version: 4.0.30319
+X-SourceFiles: =?UTF-8?B?RDpcTWVkaUNhcmVcTWVkaUNhcmVcRG9jdG9yXEtoYW1CZW5o?=
+X-Powered-By: ASP.NET
+Date: Fri, 23 Oct 2026 03:46:39 GMT
+Content-Length: 9153
+

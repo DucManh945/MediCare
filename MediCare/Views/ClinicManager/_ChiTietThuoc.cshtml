@@ -1,0 +1,14 @@
+@model MediCare.Models.MedicineItemViewModel
+<div class="row g-3">
+    <div class="col-md-6"><strong>Mã thuốc:</strong> @Model.MaThuoc</div>
+    <div class="col-md-6"><strong>Trạng thái:</strong> <span class="badge bg-info">@Model.TrangThai</span></div>
+    <div class="col-md-6"><strong>Tên thuốc:</strong> @Model.TenThuoc</div>
+    <div class="col-md-6"><strong>Hoạt chất:</strong> @(Model.HoatChat ?? "-")</div>
+    <div class="col-md-6"><strong>Nhóm thuốc:</strong> @(Model.NhomThuoc ?? "-")</div>
+    <div class="col-md-6"><strong>Đơn vị:</strong> @(Model.DonViTinh ?? "-")</div>
+    <div class="col-md-4"><strong>Tồn kho:</strong> @Model.SoLuongTon</div>
+    <div class="col-md-4"><strong>Giá nhập:</strong> @(Model.GiaNhap.HasValue ? Model.GiaNhap.Value.ToString("N0") : "-")</div>
+    <div class="col-md-4"><strong>Giá bán:</strong> @Model.GiaBan.ToString("N0")</div>
+    <div class="col-md-6"><strong>Hạn sử dụng:</strong> @(Model.HanSuDung.HasValue ? Model.HanSuDung.Value.ToString("dd/MM/yyyy") : "-")</div>
+    <div class="col-md-6"><strong>Ngưỡng cảnh báo:</strong> @Model.MucTonToiThieu</div>
+</div>

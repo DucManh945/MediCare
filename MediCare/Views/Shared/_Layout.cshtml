@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MediCare - Hệ thống quản lý phòng khám đa khoa, đặt lịch khám, hồ sơ bệnh án điện tử." />
+    <title>@ViewBag.Title - MediCare</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+</head>
+<body>
+    <div class="topbar d-none d-lg-block">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="topbar-left">
+                    <span><i class="fas fa-clock me-2"></i>Giờ mở cửa: Thứ 2 - CN 6:30 - 22:00</span>
+                    <span class="mx-3">|</span>
+                    <span><i class="fas fa-phone-alt me-2"></i>Hotline: 1900 1234</span>
+                    <span class="mx-3">|</span>
+                    <span><i class="fas fa-envelope me-2"></i>info@medicare.vn</span>
+                </div>
+                <div class="topbar-right">
+                    <a href="#" class="social-link" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-link" title="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link" title="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-link" title="YouTube"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <header class="navbar-main sticky-top">
+        <nav class="navbar navbar-expand-lg py-3">
+            <div class="container">
+                @Html.ActionLink(" ", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+                <a class="navbar-brand d-flex align-items-center gap-2" href="@Url.Action("Index", "Home")">
+                    <div class="logo-icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div class="logo-text">
+                        <span class="logo-primary">Medi</span><span class="logo-secondary">Care</span>
+                        <small class="logo-tagline">Healthcare Excellence</small>
+                    </div>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+                        aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="mainNavbar">
+                    <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Index", "Home")#home">Trang chủ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Index", "Home")#about">Giới thiệu</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Dịch vụ
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="@Url.Action("Index", "Home")#services">Khám tổng quát</a></li>
+                                <li><a class="dropdown-item" href="@Url.Action("Index", "Home")#services">Khám chuyên khoa</a></li>
+                                <li><a class="dropdown-item" href="@Url.Action("Index", "Home")#services">Tiêm chủng</a></li>
+                                <li><a class="dropdown-item" href="@Url.Action("Index", "Home")#services">Xét nghiệm & Chẩn đoán hình ảnh</a></li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li><a class="dropdown-item" href="@Url.Action("Index", "Home")#services">Tất cả dịch vụ</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Index", "Home")#doctors">Đội ngũ bác sĩ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Index", "Home")#appointment">Đặt lịch khám</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Index", "Home")#contact">Liên hệ</a>
+                        </li>
+                    </ul>
+                    <div class="d-flex gap-2 align-items-center nav-actions">
+                        @if (Request.IsAuthenticated)
+                        {
+                            if (User.IsInRole("Admin") || User.IsInRole("Admin hệ thống") || User.IsInRole("Quản trị viên"))
+                            {
+                                <a href="@Url.Action("Index", "Admin")" class="btn btn-warning btn-sm rounded-pill px-3 shadow-sm" title="Quản trị hệ thống">
+                                    <i class="fas fa-user-shield me-1"></i> Dashboard Admin
+                                </a>
+                            }
+                            else if (User.IsInRole("Quản lý phòng khám") || User.IsInRole("Quản lý"))
+                            {
+                                <a href="@Url.Action("Index", "ClinicManager")" class="btn btn-success btn-sm rounded-pill px-3 shadow-sm" title="Quản lý phòng khám">
+                                    <i class="fas fa-briefcase-medical me-1"></i> Dashboard Quản lý
+                                </a>
+                            }
+                            else if (User.IsInRole("Bác sĩ"))
+                            {
+                                <a href="@Url.Action("Index", "Doctor")" class="btn btn-info btn-sm rounded-pill px-3 shadow-sm text-white" title="Trang làm việc Bác sĩ">
+                                    <i class="fas fa-user-md me-1"></i> Dashboard Bác sĩ
+                                </a>
+                            }
+                            else
+                            {
+                                <a href="@Url.Action("LichHenCuaToi", "Home")" class="btn btn-light btn-sm rounded-pill px-3" title="Lịch hẹn của tôi">
+                                    <i class="fas fa-calendar-day text-primary"></i>
+                                    <span class="d-none d-xl-inline ms-1">Lịch hẹn</span>
+                                </a>
+                            }
+
+                            if (!User.IsInRole("Admin") && !User.IsInRole("Admin hệ thống") && !User.IsInRole("Bác sĩ") && !User.IsInRole("Quản lý phòng khám"))
+                            {
+                                <div class="dropdown">
+                                    <button class="btn btn-light btn-sm rounded-circle position-relative p-2" type="button" id="patientNotifDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Thông báo hệ thống">
+                                        <i class="fas fa-bell text-primary fs-6"></i>
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="patientUnreadBadge" style="display:none; font-size: 0.65rem;">
+                                            0
+                                        </span>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm py-0" aria-labelledby="patientNotifDropdown" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                                        <li class="p-2 bg-light border-bottom d-flex justify-content-between align-items-center">
+                                            <strong class="small text-dark"><i class="fas fa-bell me-1"></i>Thông báo của bạn</strong>
+                                            <a href="@Url.Action("ThongBao", "Home")" class="small text-primary text-decoration-none">Xem tất cả</a>
+                                        </li>
+                                        <div id="patientNotifList">
+                                            <li class="p-3 text-center text-muted small">Đang tải thông báo...</li>
+                                        </div>
+                                    </ul>
+                                </div>
+                            }
+
+                            <span class="text-muted small">Xin chào, @User.Identity.Name</span>
+                            <form method="post" action="@Url.Action("LogoutPost", "Account")" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill px-3">Đăng xuất</button>
+                            </form>
+                        }
+                        else
+                        {
+                            @Html.ActionLink("Đăng nhập", "Login", "Account", new { area = "" }, new { @class = "btn btn-outline-primary btn-sm rounded-pill px-4" })
+                            @Html.ActionLink("Đăng ký", "Register", "Account", new { area = "" }, new { @class = "btn btn-primary btn-sm rounded-pill px-4" })
+                        }
+
+                        @if (!User.Identity.IsAuthenticated || (!User.IsInRole("Admin") && !User.IsInRole("Admin hệ thống") && !User.IsInRole("Quản trị viên") && !User.IsInRole("Bác sĩ") && !User.IsInRole("Quản lý phòng khám") && !User.IsInRole("Quản lý")))
+                        {
+                            <a href="@Url.Action("Index", "Home")#appointment" class="btn btn-primary btn-sm rounded-pill px-4 shadow-primary">
+                                <i class="fas fa-calendar-check me-1"></i>Đặt lịch ngay
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        @RenderBody()
+    </main>
+
+    <footer class="footer-main">
+        <div class="footer-top">
+            <div class="container">
+                <div class="row g-4 py-5">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="footer-brand">
+                            <a class="d-flex align-items-center gap-2 mb-3 text-decoration-none" href="@Url.Action("Index", "Home")">
+                                <div class="logo-icon logo-icon-sm">
+                                    <i class="fas fa-heartbeat"></i>
+                                </div>
+                                <div>
+                                    <span class="logo-primary text-white">Medi</span><span class="logo-secondary text-white">Care</span>
+                                </div>
+                            </a>
+                            <p class="footer-desc">
+                                MediCare là hệ thống quản lý phòng khám đa khoa hàng đầu, cung cấp dịch vụ khám chữa bệnh chất lượng cao,
+                                hồ sơ bệnh án điện tử, đặt lịch khám trực tuyến với đội ngũ bác sĩ chuyên gia và trang thiết bị y tế hiện đại.
+                            </p>
+                            <div class="d-flex gap-2 mt-3">
+                                <a href="#" class="social-icon" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                                <a href="#" class="social-icon" title="Twitter"><i class="fab fa-twitter"></i></a>
+                                <a href="#" class="social-icon" title="Instagram"><i class="fab fa-instagram"></i></a>
+                                <a href="#" class="social-icon" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                                <a href="#" class="social-icon" title="YouTube"><i class="fab fa-youtube"></i></a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-6">
+                        <h6 class="footer-title">Liên kết nhanh</h6>
+                        <ul class="footer-links">
+                            <li><a href="@Url.Action("Index", "Home")#home">Trang chủ</a></li>
+                            <li><a href="@Url.Action("Index", "Home")#about">Về chúng tôi</a></li>
+                            <li><a href="@Url.Action("Index", "Home")#services">Dịch vụ</a></li>
+                            <li><a href="@Url.Action("Index", "Home")#doctors">Đội ngũ bác sĩ</a></li>
+                            <li><a href="@Url.Action("Index", "Home")#contact">Liên hệ</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="col-lg-2 col-md-6">
+                        <h6 class="footer-title">Dịch vụ y tế</h6>
+                        <ul class="footer-links">
+                            <li><a href="#">Khám tổng quát</a></li>
+                            <li><a href="#">Khám chuyên khoa</a></li>
+                            <li><a href="#">Tiêm chủng</a></li>
+                            <li><a href="#">Xét nghiệm máu</a></li>
+                            <li><a href="#">Siêu âm & X-quang</a></li>
+                            <li><a href="#">Nhà thuốc online</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6">
+                        <h6 class="footer-title">Thông tin liên hệ</h6>
+                        <ul class="footer-contact">
+                            <li>
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>123 Đường 2/4, Phường 6, Quận 3, TP. Hồ Chí Minh</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-phone-alt"></i>
+                                <span>1900 1234 (Hỗ trợ 24/7)</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-envelope"></i>
+                                <span>info@medicare.vn</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-clock"></i>
+                                <span>Thứ 2 - Chủ nhật: 6:30 - 22:00</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container py-3">
+                <div class="row align-items-center">
+                    <div class="col-md-6 text-center text-md-start">
+                        <p class="mb-0 copyright-text">&copy; @DateTime.Now.Year MediCare. Bảo lưu mọi quyền.</p>
+                    </div>
+                    <div class="col-md-6 text-center text-md-end">
+                        <ul class="list-inline mb-0">
+                            <li class="list-inline-item"><a href="#" class="copyright-link">Điều khoản dịch vụ</a></li>
+                            <li class="list-inline-item"><a href="#" class="copyright-link">Chính sách bảo mật</a></li>
+                            <li class="list-inline-item"><a href="#" class="copyright-link">Cookies</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <button id="scrollToTop" class="btn-scroll-top" aria-label="Lên đầu trang">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    @Html.Partial("_AiChatWidget")
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+    <script>
+        // @@ts-nocheck
+        $(document).ready(function() {
+            if ($('#patientUnreadBadge').length > 0) {
+                $.ajax({
+                    url: '@Url.Action("DemThongBaoChuaDoc", "Home")',
+                    type: 'GET',
+                    cache: false,
+                    success: function(data) {
+                        if (data && data.unread !== undefined && data.unread > 0) {
+                            $('#patientUnreadBadge').text(data.unread).show();
+                        } else {
+                            $('#patientUnreadBadge').hide();
+                        }
+                    }
+                });
+
+                $.ajax({
+                    url: '@Url.Action("ThongBaoJson", "Home")',
+                    type: 'GET',
+                    cache: false,
+                    success: function(res) {
+                        if (res && res.items && res.items.length > 0) {
+                            var html = '';
+                            $.each(res.items.slice(0, 5), function(i, item) {
+                                var bg = item.DaDoc ? '' : 'bg-light';
+                                html += '<li class="dropdown-item p-2 border-bottom ' + bg + ' text-wrap" style="white-space: normal;">';
+                                html += '<div class="fw-bold small text-dark">' + item.TieuDe + '</div>';
+                                html += '<div class="small text-muted" style="font-size:0.8rem;">' + item.NoiDung + '</div>';
+                                html += '<div class="text-end" style="font-size:0.7rem; color:#888;">' + item.NgayTao + '</div>';
+                                html += '</li>';
+                            });
+                            html += '<li class="p-2 text-center bg-light"><a href="@Url.Action("ThongBao", "Home")" class="small text-decoration-none fw-bold">Xem tất cả thông báo</a></li>';
+                            $('#patientNotifList').html(html);
+                        } else {
+                            $('#patientNotifList').html('<li class="p-3 text-center text-muted small">Không có thông báo mới.</li>');
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

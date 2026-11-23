@@ -1,0 +1,109 @@
+@model MediCare.Models.DoctorExaminationViewModel
+
+@{ 
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml"; 
+}
+
+@section SidebarNav { 
+    @Html.Partial("~/Views/Shared/_DoctorSidebar.cshtml")
+}
+
+@if (TempData["Message"] != null) {
+    <div class="alert alert-success"><i class="fas fa-circle-check me-2"></i>@TempData["Message"]</div>
+}
+
+@if (Model.AppointmentId == 0) {
+    <div class="alert alert-info">
+        Vui lòng mở phiếu khám từ một lịch hẹn được phân công.
+    </div>
+} else {
+    <div class="patient-info-card mb-4 p-3 bg-light rounded border d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="text-dark mb-1">@Model.PatientName</h3>
+            <div class="text-muted small">
+                Mã bệnh nhân: <strong>#@Model.PatientId</strong> | Điện thoại: @(Model.Phone ?? "N/A") | Ngày khám: @Model.ExaminationDate.ToString("dd/MM/yyyy") | Trạng thái: <span class="badge @(Model.Status == "Hoàn thành" ? "bg-success" : "bg-warning text-dark")">@Model.Status</span>
+            </div>
+        </div>
+        <div>
+            <a href="@Url.Action("LichSuKham", new { id = Model.PatientId })" class="btn btn-sm btn-outline-secondary" target="_blank">
+                <i class="fas fa-clock-rotate-left me-1"></i>Lịch sử khám
+            </a>
+        </div>
+    </div>
+
+    <div class="dash-card">
+        <div class="dash-card-header d-flex justify-content-between align-items-center">
+            <h3 class="dash-card-title"><i class="fas fa-stethoscope me-2"></i>Phiếu khám SOAP</h3>
+            @if (Model.AlreadySaved && Model.ExaminationId.HasValue && Model.ExaminationId.Value > 0) {
+                <div>
+                    <a href="@Url.Action("ChiDinhCLS", new { examinationId = Model.ExaminationId.Value })" class="btn btn-sm btn-outline-info">
+                        <i class="fas fa-flask me-1"></i>Chỉ định CLS
+                    </a>
+                    <a href="@Url.Action("KeDonThuoc", new { examinationId = Model.ExaminationId.Value })" class="btn btn-sm btn-outline-success ms-2">
+                        <i class="fas fa-pills me-1"></i>Kê đơn thuốc
+                    </a>
+                </div>
+            }
+        </div>
+        <div class="dash-card-body">
+            @using (Html.BeginForm("KhamBenh", "Doctor", FormMethod.Post)) {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.AppointmentId)
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Huyết áp (mmHg)</label>
+                        <input name="BloodPressure" value="@Model.BloodPressure" class="form-control" placeholder="ví dụ: 120/80" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Mạch (lần/phút)</label>
+                        <input name="Pulse" value="@Model.Pulse" type="number" class="form-control" placeholder="ví dụ: 80" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Nhiệt độ (°C)</label>
+                        <input name="Temperature" value="@Model.Temperature" type="number" step="0.1" class="form-control" placeholder="ví dụ: 37.0" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Cân nặng (kg)</label>
+                        <input name="Weight" value="@Model.Weight" type="number" step="0.1" class="form-control" placeholder="ví dụ: 60" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Triệu chứng (Subjective)</label>
+                        <textarea name="Symptoms" class="form-control" rows="4" placeholder="Nhập lý do khám, triệu chứng bệnh nhân khai báo...">@Model.Symptoms</textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Chẩn đoán (Assessment)</label>
+                        <textarea name="Diagnosis" class="form-control" rows="4" placeholder="Nhập kết luận chẩn đoán lâm sàng...">@Model.Diagnosis</textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Lời dặn / Kế hoạch điều trị (Plan)</label>
+                        <textarea name="Instructions" class="form-control" rows="3" placeholder="Nhập hướng dẫn dùng thuốc, chế độ ăn uống, hẹn tái khám...">@Model.Instructions</textarea>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>@(Model.AlreadySaved ? "Lưu & Cập nhật SOAP" : "Lưu phiếu khám")
+                    </button>
+                </div>
+            }
+
+            @if (Model.AlreadySaved && Model.Status != "Hoàn thành") {
+                <hr class="my-4" />
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-muted small">
+                        Sau khi đã ghi nhận SOAP, chỉ định CLS và kê đơn thuốc xong, bấm <strong>Hoàn thành khám</strong> để đóng phiếu.
+                    </div>
+                    @using (Html.BeginForm("HoanThanhKham", "Doctor", FormMethod.Post)) {
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="appointmentId" value="@Model.AppointmentId" />
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check-circle me-1"></i>Hoàn thành lượt khám
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}

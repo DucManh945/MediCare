@@ -1,0 +1,112 @@
+@model MediCare.Models.ClinicSettingsViewModel
+@{
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    ViewBag.ActiveManagerMenu = "settings";
+}
+
+@section SidebarNav {
+    @Html.Partial("_ClinicManagerSidebar")
+}
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4"><i class="fas fa-circle-check me-2"></i>@TempData["Message"]</div>
+}
+@if (TempData["Error"] != null || ViewBag.Error != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4"><i class="fas fa-triangle-exclamation me-2"></i>@(TempData["Error"] ?? ViewBag.Error)</div>
+}
+
+<div class="dash-card">
+    <div class="dash-card-header">
+        <h3 class="dash-card-title mb-0">
+            <i class="fas fa-sliders text-primary me-2"></i>
+            Cài đặt Thông tin & Bảng giá Dịch vụ Khám chữa bệnh (VietQR & CSDL)
+        </h3>
+    </div>
+
+    <div class="dash-card-body">
+        @using (Html.BeginForm("CaiDat", "ClinicManager", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+
+            <!-- Section 1: Clinic & Bank Config Info -->
+            <h5 class="font-weight-bold text-dark border-bottom pb-2 mb-3">
+                <i class="fas fa-hospital me-2 text-primary"></i>1. Thông tin Hành chính & Cấu hình Tài khoản VietQR
+            </h5>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label font-weight-semibold">Tên Cơ sở / Phòng khám:</label>
+                    @Html.TextBoxFor(m => m.ClinicName, new { @class = "form-control" })
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label font-weight-semibold">Mã Cơ sở KCB (BHYT):</label>
+                    @Html.TextBoxFor(m => m.InsuranceCode, new { @class = "form-control" })
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label font-weight-semibold">Mã Ngân hàng (Bank Code):</label>
+                    @Html.TextBoxFor(m => m.BankCode, new { @class = "form-control" })
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label font-weight-semibold">Số tài khoản nhận tiền:</label>
+                    @Html.TextBoxFor(m => m.BankAccountNo, new { @class = "form-control" })
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label font-weight-semibold">Chủ tài khoản:</label>
+                    @Html.TextBoxFor(m => m.BankAccountName, new { @class = "form-control" })
+                </div>
+            </div>
+
+            <!-- Section 2: Service Price List -->
+            <h5 class="font-weight-bold text-dark border-bottom pb-2 mb-3">
+                <i class="fas fa-file-invoice-dollar me-2 text-success"></i>2. Bảng giá Dịch vụ KCB & Cận lâm sàng (Từ bảng dbo.DichVuCLS)
+            </h5>
+
+            <div class="table-responsive mb-4">
+                <table class="dash-table align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Mã DV</th>
+                            <th>Tên Dịch vụ</th>
+                            <th>Loại dịch vụ</th>
+                            <th class="text-end" style="width: 200px;">Đơn giá (VNĐ)</th>
+                            <th class="text-center">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.ServicePrices != null && Model.ServicePrices.Count > 0)
+                        {
+                            for (int i = 0; i < Model.ServicePrices.Count; i++)
+                            {
+                                <tr>
+                                    <td><strong>@Model.ServicePrices[i].ServiceId</strong></td>
+                                    <td>
+                                        @Model.ServicePrices[i].ServiceName
+                                        @Html.HiddenFor(m => m.ServicePrices[i].ServiceId)
+                                        @Html.HiddenFor(m => m.ServicePrices[i].ServiceName)
+                                    </td>
+                                    <td><span class="badge-pill badge-primary">@Model.ServicePrices[i].ServiceType</span></td>
+                                    <td class="text-end">
+                                        @Html.TextBoxFor(m => m.ServicePrices[i].Price, new { @class = "form-control form-control-sm text-end fw-bold text-primary", type = "number", step = "1000", min = "0" })
+                                    </td>
+                                    <td class="text-center"><span class="badge bg-success">Đang áp dụng</span></td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="5" class="text-center text-muted py-3">Không có dịch vụ nào trong CSDL.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button type="submit" class="btn btn-primary fw-bold px-4 py-2">
+                    <i class="fas fa-save me-1"></i> Lưu thay đổi cài đặt
+                </button>
+            </div>
+        }
+    </div>
+</div>

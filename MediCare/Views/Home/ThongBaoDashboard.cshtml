@@ -1,0 +1,90 @@
+@model List<MediCare.Models.NotificationItemViewModel>
+@{
+    ViewBag.Title = "Thông báo hệ thống";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+
+    string roleName = "";
+    if (User.IsInRole("Bác sĩ") || User.IsInRole("bac si")) { roleName = "Doctor"; }
+    else if (User.IsInRole("Quản lý phòng khám") || User.IsInRole("Quản lý")) { roleName = "Manager"; }
+    else { roleName = "Admin"; }
+}
+
+@section SidebarNav {
+    @if (roleName == "Doctor")
+    {
+        @Html.Partial("_DoctorSidebar")
+    }
+    else if (roleName == "Manager")
+    {
+        @Html.Partial("_ClinicManagerSidebar")
+    }
+    else
+    {
+        @Html.Partial("~/Views/Shared/_AdminSidebar.cshtml")
+    }
+}
+
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-bell text-primary me-2"></i>Nhật ký Thông báo Hệ thống</h2>
+            <p class="text-muted mb-0">Các cập nhật phân công và điều phối lịch hẹn theo tài khoản của bạn</p>
+        </div>
+    </div>
+
+    <div class="dash-card">
+        <div class="dash-card-body p-0">
+            @if (Model != null && Model.Count > 0)
+            {
+                <div class="list-group list-group-flush">
+                    @foreach (var item in Model)
+                    {
+                        <div class="list-group-item p-3 @(!item.DaDoc ? "bg-light border-start border-4 border-primary" : "")">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="me-3">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <span class="badge @(item.LoaiThongBao.Contains("CANCELLED") ? "bg-danger" : item.LoaiThongBao.Contains("CONFIRMED") ? "bg-success" : "bg-primary")">
+                                            @item.LoaiThongBao
+                                        </span>
+                                        <strong class="text-dark">@item.TieuDe</strong>
+                                        @if (!item.DaDoc)
+                                        {
+                                            <span class="badge bg-warning text-dark">Mới</span>
+                                        }
+                                    </div>
+                                    <p class="text-secondary mb-1">@item.NoiDung</p>
+                                    <div class="small text-muted">
+                                        <i class="fas fa-clock me-1"></i>@item.NgayTao.ToString("dd/MM/yyyy HH:mm:ss")
+                                        @if (item.MaLichHen.HasValue)
+                                        {
+                                            <span class="ms-2"><i class="fas fa-calendar-check me-1"></i>Mã lịch: #LH-@item.MaLichHen</span>
+                                        }
+                                    </div>
+                                </div>
+                                @if (!item.DaDoc)
+                                {
+                                    using (Html.BeginForm("DanhDauDaDoc", "Home", FormMethod.Post))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        @Html.Hidden("id", item.MaThongBao)
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-check me-1"></i>Đã đọc
+                                        </button>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-bell-slash fs-1 text-secondary mb-3 d-block"></i>
+                    <h5>Không có thông báo nào</h5>
+                    <p class="small">Bạn hiện chưa có thông báo nào trong hệ thống.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

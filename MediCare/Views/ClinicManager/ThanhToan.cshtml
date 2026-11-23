@@ -1,0 +1,246 @@
+@model MediCare.Models.InvoiceDetailViewModel
+@{
+    ViewBag.Title = "Thanh toán Hóa đơn";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    ViewBag.ActiveManagerMenu = "appointments";
+}
+
+@section SidebarNav {
+    @Html.Partial("_ClinicManagerSidebar")
+}
+
+<div class="container-fluid py-2">
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="fas fa-circle-check me-2"></i>@TempData["Message"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null || ViewBag.Error != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            <i class="fas fa-triangle-exclamation me-2"></i>@(TempData["Error"] ?? ViewBag.Error)
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-file-invoice-dollar text-primary me-2"></i>Hóa đơn & Thanh toán</h2>
+            <p class="text-muted mb-0">Mã hóa đơn: <strong>#HD-@Model.InvoiceId.ToString("D6")</strong> | Phiếu khám: #@Model.ExaminationId</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" onclick="window.print()">
+                <i class="fas fa-print me-1"></i> In hóa đơn
+            </button>
+            <a href="@Url.Action("LichHen", "ClinicManager")" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-1"></i> Quay lại quản lý
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Cột thông tin & chi tiết phí -->
+        <div class="col-lg-7">
+            <div class="dash-card mb-4">
+                <div class="dash-card-header"><h3 class="dash-card-title">Thông tin khám chữa bệnh</h3></div>
+                <div class="dash-card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <span class="text-muted small d-block">Họ tên bệnh nhân</span>
+                            <strong>@Model.PatientName</strong> <span class="text-muted">(ĐT: @Model.PatientPhone)</span>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="text-muted small d-block">Bác sĩ phụ trách</span>
+                            <strong>@Model.DoctorName</strong> (@Model.DepartmentName)
+                        </div>
+                        <div class="col-md-6">
+                            <span class="text-muted small d-block">Ngày khám</span>
+                            <span>@Model.ExaminationDate.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="text-muted small d-block">Trạng thái thanh toán</span>
+                            <span class="badge @(Model.Status == "Đã thanh toán" ? "bg-success fs-6" : "bg-warning text-dark fs-6")">
+                                @Model.Status
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dash-card">
+                <div class="dash-card-header"><h3 class="dash-card-title">Bảng kê chi phí khám chữa bệnh</h3></div>
+                <div class="dash-card-body p-0">
+                    <div class="table-responsive">
+                        <table class="dash-table align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nội dung chi phí</th>
+                                    <th class="text-center">SL</th>
+                                    <th class="text-end">Đơn giá</th>
+                                    <th class="text-end">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.ClsItems.Count > 0)
+                                {
+                                    <tr class="table-active"><td colspan="4" class="fw-bold small text-primary">I. Cận lâm sàng & Thủ thuật</td></tr>
+                                    foreach (var item in Model.ClsItems)
+                                    {
+                                        <tr>
+                                            <td>@item.Name <div class="small text-muted">Trạng thái: @item.Note</div></td>
+                                            <td class="text-center">@item.Quantity</td>
+                                            <td class="text-end">@item.UnitPrice.ToString("N0")đ</td>
+                                            <td class="text-end fw-bold">@item.Amount.ToString("N0")đ</td>
+                                        </tr>
+                                    }
+                                }
+                                @if (Model.MedicineItems.Count > 0)
+                                {
+                                    <tr class="table-active"><td colspan="4" class="fw-bold small text-success">II. Đơn thuốc điều trị</td></tr>
+                                    foreach (var item in Model.MedicineItems)
+                                    {
+                                        <tr>
+                                            <td>@item.Name <div class="small text-muted">Liều dùng: @item.Note</div></td>
+                                            <td class="text-center">@item.Quantity</td>
+                                            <td class="text-end">@item.UnitPrice.ToString("N0")đ</td>
+                                            <td class="text-end fw-bold">@item.Amount.ToString("N0")đ</td>
+                                        </tr>
+                                    }
+                                }
+                                @if (Model.ClsItems.Count == 0 && Model.MedicineItems.Count == 0)
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-3">Phí khám cơ bản</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th colspan="3" class="text-end">Tổng cộng thanh toán:</th>
+                                    <th class="text-end text-success fs-5">@Model.TotalAmount.ToString("N0")đ</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột phương thức thanh toán -->
+        <div class="col-lg-5">
+            <div class="dash-card">
+                <div class="dash-card-header"><h3 class="dash-card-title"><i class="fas fa-wallet me-2"></i>Chọn hình thức thanh toán</h3></div>
+                <div class="dash-card-body">
+                    @if (Model.Status == "Đã thanh toán")
+                    {
+                        <div class="alert alert-success text-center py-4">
+                            <i class="fas fa-circle-check fs-1 text-success mb-3"></i>
+                            <h4>Hóa đơn đã được thanh toán</h4>
+                            <p class="text-muted mb-1">Phương thức: <strong>@Model.PaymentMethod</strong></p>
+                            <p class="text-muted mb-0">Thời gian: <strong>@(Model.PaymentDate?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</strong></p>
+                        </div>
+                    }
+                    else
+                    {
+                        <ul class="nav nav-pills mb-3" id="paymentTabs" role="tablist">
+                            <li class="nav-item flex-fill" role="presentation">
+                                <button class="nav-link active w-100" id="qr-tab" data-bs-toggle="pill" data-bs-target="#qrPane" type="button" role="tab">
+                                    <i class="fas fa-qrcode me-1"></i> VietQR Ngân hàng
+                                </button>
+                            </li>
+                            <li class="nav-item flex-fill" role="presentation">
+                                <button class="nav-link w-100" id="cash-tab" data-bs-toggle="pill" data-bs-target="#cashPane" type="button" role="tab">
+                                    <i class="fas fa-money-bill-wave me-1"></i> Tiền mặt tại quầy
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="paymentTabsContent">
+                            <!-- Tab VietQR -->
+                            <div class="tab-pane fade show active text-center p-3 border rounded bg-light" id="qrPane" role="tabpanel">
+                                <h5 class="text-dark mb-2">Quét mã QR để chuyển khoản</h5>
+                                <p class="text-muted small mb-3">Sử dụng App Ngân hàng hoặc Ví điện tử bất kỳ để quét mã VietQR bên dưới</p>
+
+                                <div class="bg-white p-3 rounded shadow-sm d-inline-block mb-3">
+                                    <img src="@Model.QrCodeUrl" alt="VietQR Thanh Toan" class="img-fluid" style="max-width: 240px; height: auto;" />
+                                </div>
+
+                                <div class="text-start small bg-white p-3 rounded border mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted">Ngân hàng:</span>
+                                        <strong>MB Bank (Quân Đội)</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted">Số tài khoản:</span>
+                                        <strong class="text-primary">@Model.BankAccountNo</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted">Chủ tài khoản:</span>
+                                        <strong>@Model.BankAccountName</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted">Số tiền:</span>
+                                        <strong class="text-success">@Model.TotalAmount.ToString("N0")đ</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">Nội dung CK:</span>
+                                        <strong class="text-danger">@Model.ReferenceCode</strong>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info py-2 small mb-3">
+                                    <i class="fas fa-spinner fa-spin me-1"></i> Đang chờ hệ thống ngân hàng xác nhận giao dịch tự động...
+                                </div>
+
+                                @using (Html.BeginForm("MoPhongThanhToanQR", "ClinicManager", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="invoiceId" value="@Model.InvoiceId" />
+                                    <button type="submit" class="btn btn-success w-100 py-2">
+                                        <i class="fas fa-check-circle me-1"></i>[Sandbox Local] Xác nhận QR Thành công
+                                    </button>
+                                }
+                            </div>
+
+                            <!-- Tab Tiền mặt -->
+                            <div class="tab-pane fade p-4 border rounded bg-light" id="cashPane" role="tabpanel">
+                                <h5 class="text-dark mb-3 text-center">Thu tiền mặt trực tiếp tại quầy</h5>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small">Tổng tiền cần thu:</label>
+                                    <input type="text" class="form-control fw-bold text-success fs-5" value="@Model.TotalAmount.ToString("N0") đ" readonly />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small">Tiền khách đưa:</label>
+                                    <input type="number" id="tienKhachDua" class="form-control" placeholder="Nhập số tiền khách đưa..." oninput="tinhTienThua(@Model.TotalAmount)" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small">Tiền thừa trả khách:</label>
+                                    <input type="text" id="tienThua" class="form-control fw-bold text-primary" value="0đ" readonly />
+                                </div>
+
+                                @using (Html.BeginForm("XacNhanThanhToanTienMat", "ClinicManager", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="invoiceId" value="@Model.InvoiceId" />
+                                    <button type="submit" class="btn btn-primary w-100 py-2">
+                                        <i class="fas fa-cash-register me-1"></i>Xác nhận thu tiền mặt & In phiếu
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function tinhTienThua(tongTien) {
+        const khachDua = parseFloat(document.getElementById('tienKhachDua').value) || 0;
+        const thua = khachDua - tongTien;
+        document.getElementById('tienThua').value = thua >= 0 ? thua.toLocaleString('vi-VN') + 'đ' : 'Chưa đủ tiền';
+    }
+</script>

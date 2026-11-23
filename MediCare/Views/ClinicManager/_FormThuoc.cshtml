@@ -1,0 +1,60 @@
+@model MediCare.Models.MedicineEditViewModel
+@using (Html.BeginForm(Model.MaThuoc == 0 ? "ThemThuoc" : "SuaThuoc", "ClinicManager", FormMethod.Post, new { @class = "row g-3 medicine-form" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.MaThuoc)
+    @Html.ValidationSummary(false, "", new { @class = "col-12 text-danger" })
+    <div class="col-md-6">
+        @Html.LabelFor(m => m.TenThuoc, "Tên thuốc", new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.TenThuoc, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.TenThuoc, null, new { @class = "text-danger" })
+    </div>
+    <div class="col-md-6">
+        @Html.LabelFor(m => m.HoatChat, "Hoạt chất", new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.HoatChat, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.HoatChat, null, new { @class = "text-danger" })
+    </div>
+    <div class="col-md-6">
+        @Html.LabelFor(m => m.NhomThuoc, "Nhóm thuốc", new { @class = "form-label" })
+        @Html.DropDownListFor(m => m.NhomThuoc, new SelectList(Model.Groups, Model.NhomThuoc), "-- Chọn nhóm thuốc --", new { @class = "form-select" })
+    </div>
+    <div class="col-md-6">
+        @Html.LabelFor(m => m.DonViTinh, "Đơn vị tính", new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.DonViTinh, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.DonViTinh, null, new { @class = "text-danger" })
+    </div>
+    <div class="col-md-4">
+        @Html.LabelFor(m => m.SoLuongTon, "Số lượng tồn", new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.SoLuongTon, new { @class = "form-control", type = "number", min = "0" })
+        @Html.ValidationMessageFor(m => m.SoLuongTon, null, new { @class = "text-danger" })
+    </div>
+    <div class="col-md-4">
+        @Html.LabelFor(m => m.GiaNhap, "Giá nhập", new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.GiaNhap, new { @class = "form-control", type = "number", min = "0", step = "0.01" })
+        @Html.ValidationMessageFor(m => m.GiaNhap, null, new { @class = "text-danger" })
+    </div>
+    <div class="col-md-4">
+        @Html.LabelFor(m => m.GiaBan, "Giá bán", new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.GiaBan, new { @class = "form-control", type = "number", min = "0", step = "0.01" })
+        @Html.ValidationMessageFor(m => m.GiaBan, null, new { @class = "text-danger" })
+    </div>
+    <div class="col-md-6">
+        @Html.LabelFor(m => m.HanSuDung, "Hạn sử dụng", new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.HanSuDung, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+        @Html.ValidationMessageFor(m => m.HanSuDung, null, new { @class = "text-danger" })
+    </div>
+    <div class="col-md-3">
+        @Html.LabelFor(m => m.MucTonToiThieu, "Ngưỡng cảnh báo", new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.MucTonToiThieu, new { @class = "form-control", type = "number", min = "0" })
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+        <div class="form-check mb-2">
+            @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input" })
+            @Html.LabelFor(m => m.IsActive, "Đang kinh doanh", new { @class = "form-check-label" })
+        </div>
+    </div>
+    <div class="col-12 d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Lưu thuốc</button>
+    </div>
+}

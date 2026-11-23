@@ -1,0 +1,14 @@
+@model MediCare.Models.MedicalRecordItemViewModel
+@{
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+@section SidebarNav {
+    @Html.Partial("_ClinicManagerSidebar")
+}
+<div class="dash-card">
+    <div class="dash-card-header"><h3 class="dash-card-title"><i class="fas fa-history"></i> Lịch sử khám - @Model.PatientName</h3><a class="btn-dash btn-dash-outline" href="@Url.Action("ChiTietHoSoBenhAn", new { id = Model.PatientId })">Chi tiết hồ sơ</a></div>
+    <div class="dash-card-body">
+        <div class="table-responsive"><table class="dash-table"><thead><tr><th>Mã bệnh nhân</th><th>Họ tên</th><th>Số lần khám</th><th>Lần khám đầu</th><th>Lần khám cuối</th><th>Bác sĩ gần nhất</th><th>Trạng thái</th></tr></thead><tbody><tr><td>@Model.PatientCode</td><td>@Model.PatientName</td><td>@Model.VisitCount</td><td>@Model.CreatedDate.ToString("dd/MM/yyyy")</td><td>@Model.LastVisitDate.ToString("dd/MM/yyyy")</td><td>@Model.DoctorName</td><td>@Model.Status</td></tr></tbody></table></div>
+        <div class="alert alert-info mt-3 mb-0">Chi tiết từng phiếu khám chỉ hiển thị khi hệ thống có màn hình nghiệp vụ tương ứng.</div>
+    </div>
+</div>

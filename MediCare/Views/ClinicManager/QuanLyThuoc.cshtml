@@ -1,0 +1,135 @@
+@model MediCare.Models.MedicineListViewModel
+@{
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    var hasFilter = !string.IsNullOrWhiteSpace(Model.Search) || !string.IsNullOrWhiteSpace(Model.Group) || !string.IsNullOrWhiteSpace(Model.Status) || !string.IsNullOrWhiteSpace(Model.ExpiryStatus);
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h2 class="mb-1">Quản lý thuốc & Kho dược</h2>
+        <p class="text-muted mb-0">Dữ liệu được lấy trực tiếp từ kho thuốc.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" href="@Url.Action("QuanLyNhomThuoc", "ClinicManager")">
+            <i class="fas fa-layer-group me-1"></i>Nhóm thuốc
+        </a>
+        <a class="btn btn-outline-success" href="@Url.Action("XuatThuocCsv", new { search = Model.Search, group = Model.Group, status = Model.Status, expiryStatus = Model.ExpiryStatus })">
+            <i class="fas fa-file-csv me-1"></i>Xuất Excel/CSV
+        </a>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#medicineModal" data-url="@Url.Action("ThemThuoc")">
+            <i class="fas fa-plus me-1"></i>Thêm thuốc mới
+        </button>
+    </div>
+</div>
+
+@if (ViewBag.DatabaseError != null)
+{
+    <div class="alert alert-danger"><i class="fas fa-triangle-exclamation me-2"></i>@ViewBag.DatabaseError</div>
+}
+@if (TempData["MedicineMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["MedicineMessage"]</div>
+}
+@if (TempData["MedicineError"] != null)
+{
+    <div class="alert alert-danger">@TempData["MedicineError"]</div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><small class="text-muted">Mặt hàng đang kinh doanh</small><h3 class="mt-2 mb-0">@Model.ActiveItems</h3></div></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><small class="text-muted">Tổng số lượng tồn</small><h3 class="mt-2 mb-0">@Model.TotalStock</h3></div></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><small class="text-muted">Sắp hết hàng</small><h3 class="mt-2 mb-0 text-warning">@Model.LowStock</h3></div></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><small class="text-muted">Hết hàng</small><h3 class="mt-2 mb-0 text-danger">@Model.OutOfStock</h3></div></div></div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        @using (Html.BeginForm("QuanLyThuoc", "ClinicManager", FormMethod.Get, new { @class = "row g-2 align-items-end" }))
+        {
+            <div class="col-lg-4"><label class="form-label">Tìm thuốc</label><input name="search" value="@Model.Search" class="form-control" placeholder="Mã, tên hoặc hoạt chất" /></div>
+            <div class="col-lg-2"><label class="form-label">Nhóm thuốc</label><select name="group" class="form-select"><option value="">Tất cả nhóm</option>@foreach (var group in Model.Groups) { <option value="@group" @(Model.Group == group ? "selected" : "")>@group</option> }</select></div>
+            <div class="col-lg-2"><label class="form-label">Tồn kho</label><select name="status" class="form-select"><option value="">Tất cả</option><option value="active" @(Model.Status == "active" ? "selected" : "")>Đang kinh doanh</option><option value="inactive" @(Model.Status == "inactive" ? "selected" : "")>Ngừng kinh doanh</option><option value="low" @(Model.Status == "low" ? "selected" : "")>Sắp hết</option><option value="out" @(Model.Status == "out" ? "selected" : "")>Hết hàng</option></select></div>
+            <div class="col-lg-2"><label class="form-label">Hạn dùng</label><select name="expiryStatus" class="form-select"><option value="">Tất cả</option><option value="expired" @(Model.ExpiryStatus == "expired" ? "selected" : "")>Đã hết hạn</option><option value="soon" @(Model.ExpiryStatus == "soon" ? "selected" : "")>Trong 30 ngày</option><option value="valid" @(Model.ExpiryStatus == "valid" ? "selected" : "")>Còn hạn</option></select></div>
+            <div class="col-lg-2 d-flex gap-2"><button class="btn btn-primary flex-fill" type="submit"><i class="fas fa-search"></i> Lọc</button><a class="btn btn-outline-secondary" href="@Url.Action("QuanLyThuoc")" title="Đặt lại"><i class="fas fa-rotate-left"></i></a></div>
+        }
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead><tr><th>Mã</th><th>Thuốc</th><th>Hoạt chất</th><th>Đơn vị</th><th>Tồn</th><th>Giá bán</th><th>Hạn dùng</th><th>Trạng thái</th><th></th></tr></thead>
+            <tbody>
+            @if (Model.Items.Count == 0)
+            {
+                <tr><td colspan="9" class="text-center text-muted py-5">@(hasFilter ? "Không tìm thấy thuốc phù hợp." : "Chưa có dữ liệu thuốc.")</td></tr>
+            }
+            else
+            {
+                foreach (var item in Model.Items)
+                {
+                    var badge = item.TrangThai == "Còn hàng" ? "success" : item.TrangThai == "Sắp hết" ? "warning" : "danger";
+                    <tr>
+                        <td>#@item.MaThuoc</td><td><strong>@item.TenThuoc</strong><br /><small class="text-muted">@(item.NhomThuoc ?? "Chưa phân nhóm")</small></td><td>@(item.HoatChat ?? "-")</td><td>@item.DonViTinh</td><td>@item.SoLuongTon</td><td>@item.GiaBan.ToString("N0") đ</td><td>@(item.HanSuDung.HasValue ? item.HanSuDung.Value.ToString("dd/MM/yyyy") : "-")</td><td><span class="badge text-bg-@badge">@item.TrangThai</span></td>
+                        <td class="text-nowrap"><button class="btn btn-sm btn-outline-info medicine-detail" data-url="@Url.Action("ChiTietThuoc", new { id = item.MaThuoc })" data-bs-toggle="modal" data-bs-target="#medicineModal"><i class="fas fa-eye"></i></button> <button class="btn btn-sm btn-outline-primary medicine-edit" data-url="@Url.Action("SuaThuoc", new { id = item.MaThuoc })" data-bs-toggle="modal" data-bs-target="#medicineModal"><i class="fas fa-pen"></i></button> @using (Html.BeginForm("XoaThuoc", "ClinicManager", new { id = item.MaThuoc }, FormMethod.Post, new { @class = "d-inline", onsubmit = "return confirm('Xóa thuốc này? Nếu đã có đơn thuốc liên quan, hệ thống sẽ từ chối xóa.');" })) { @Html.AntiForgeryToken() <button class="btn btn-sm btn-outline-danger" type="submit"><i class="fas fa-trash"></i></button> }</td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center"><small class="text-muted">@Model.TotalItems bản ghi</small><nav><ul class="pagination mb-0">@for (var p = 1; p <= Model.TotalPages; p++) { <li class="page-item @(p == Model.Page ? "active" : "")"><a class="page-link" href="@Url.Action("QuanLyThuoc", new { search = Model.Search, group = Model.Group, status = Model.Status, expiryStatus = Model.ExpiryStatus, page = p })">@p</a></li> }</ul></nav></div>
+    }
+</div>
+
+<div class="modal fade" id="medicineModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Thuốc</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body" id="medicineModalBody"><div class="text-center py-4"><span class="spinner-border"></span></div></div></div></div></div>
+
+@section SidebarNav {
+    @Html.Partial("_ClinicManagerSidebar")
+}
+
+@section scripts {
+<script>
+(function () {
+    var modal = document.getElementById('medicineModal');
+    if (!modal) return;
+    modal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var url = button.getAttribute('data-url');
+        var body = document.getElementById('medicineModalBody');
+        body.innerHTML = '<div class="text-center py-4"><span class="spinner-border"></span></div>';
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (response) { if (!response.ok) throw new Error('Không tải được dữ liệu thuốc.'); return response.text(); })
+            .then(function (html) { body.innerHTML = html; })
+            .catch(function (error) { body.innerHTML = '<div class="alert alert-danger">' + error.message + '</div>'; });
+    });
+    document.getElementById('medicineModalBody').addEventListener('submit', function (event) {
+        var form = event.target;
+        if (!form.matches('form.medicine-form')) return;
+        event.preventDefault();
+        var body = document.getElementById('medicineModalBody');
+        var submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) submitButton.disabled = true;
+        fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function (response) {
+            var contentType = response.headers.get('content-type') || '';
+            if (contentType.indexOf('application/json') >= 0) {
+                return response.json().then(function (result) {
+                    if (!response.ok || !result.success) throw new Error('Không thể lưu thuốc.');
+                    window.location.reload();
+                });
+            }
+            return response.text().then(function (html) { body.innerHTML = html; });
+        }).catch(function (error) {
+            body.insertAdjacentHTML('afterbegin', '<div class="alert alert-danger">' + error.message + '</div>');
+            if (submitButton) submitButton.disabled = false;
+        });
+    });
+})();
+</script>
+}

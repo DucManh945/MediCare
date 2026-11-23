@@ -1,0 +1,13 @@
+@{
+    var active = ViewBag.ActiveDoctorMenu as string ?? "";
+}
+<div class="sidebar-menu-title">CHUNG</div>
+<a href="@Url.Action("Index", "Doctor")" class="sidebar-link @(active == "Index" ? "active" : "")"><i class="fas fa-gauge-high"></i><span>Tổng quan</span></a>
+<a href="@Url.Action("ThongTinCaNhan", "Account")" class="sidebar-link @(active == "ThongTinCaNhan" ? "active" : "")"><i class="fas fa-user-pen"></i><span>Thông tin cá nhân</span></a>
+<div class="sidebar-menu-title mt-3">NGHIỆP VỤ Y KHOA</div>
+<a href="@Url.Action("KhamBenh", "Doctor")" class="sidebar-link @(active == "KhamBenh" ? "active" : "")"><i class="fas fa-stethoscope"></i><span>Khám bệnh (SOAP)</span></a>
+<a href="@Url.Action("PhieuKham", "Doctor", new { destination = "ChiDinhCLS" })" class="sidebar-link @(active == "ChiDinhCLS" ? "active" : "")"><i class="fas fa-microscope"></i><span>Chỉ định & Kết quả CLS</span></a>
+<a href="@Url.Action("PhieuKham", "Doctor", new { destination = "KeDonThuoc" })" class="sidebar-link @(active == "KeDonThuoc" ? "active" : "")"><i class="fas fa-prescription-bottle-medical"></i><span>Kê đơn thuốc</span></a>
+<a href="@Url.Action("HoSoBenhAn", "Doctor")" class="sidebar-link @(active == "HoSoBenhAn" ? "active" : "")"><i class="fas fa-folder-open"></i><span>Hồ sơ bệnh án (EMR)</span></a>
+<a href="@Url.Action("LichHen", "Doctor")" class="sidebar-link @(active == "LichHen" ? "active" : "")"><i class="fas fa-calendar-check"></i><span>Lịch hẹn & Hàng đợi</span></a>
+<a href="@Url.Action("ThongBao", "Home")" class="sidebar-link @(active == "ThongBao" ? "active" : "")"><i class="fas fa-bell"></i><span>Thông báo hệ thống</span></a>

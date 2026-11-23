@@ -1,0 +1,84 @@
+@model MediCare.Models.SystemSettingsViewModel
+@{
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarNav {
+    @Html.Partial("~/Views/Shared/_AdminSidebar.cshtml")
+}
+
+@if (TempData["ConfigMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4"><i class="fas fa-circle-check me-2"></i>@TempData["ConfigMessage"]</div>
+}
+@if (TempData["ConfigError"] != null || ViewBag.Error != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4"><i class="fas fa-triangle-exclamation me-2"></i>@(TempData["ConfigError"] ?? ViewBag.Error)</div>
+}
+
+<!-- System Config Card -->
+<div class="dash-card">
+    <div class="dash-card-header">
+        <h3 class="dash-card-title mb-0">
+            <i class="fas fa-sliders text-primary me-2"></i>
+            Cấu hình Tham số Hệ thống MediCare (System Settings từ CSDL)
+        </h3>
+    </div>
+
+    <div class="dash-card-body">
+        @using (Html.BeginForm("CauHinh", "Admin", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label font-weight-semibold">Tên Hệ thống / Ứng dụng:</label>
+                    @Html.TextBoxFor(m => m.SystemName, new { @class = "form-control" })
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label font-weight-semibold">Phiên bản Hệ thống (System Version):</label>
+                    @Html.TextBoxFor(m => m.SystemVersion, new { @class = "form-control", @readonly = "readonly" })
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label font-weight-semibold">Email gửi Thông báo (SMTP Host):</label>
+                    @Html.TextBoxFor(m => m.SmtpHost, new { @class = "form-control" })
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label font-weight-semibold">Thời gian hết hạn Phiên làm việc (Session Timeout):</label>
+                    @Html.DropDownListFor(m => m.SessionTimeout, new SelectList(new[] {
+                        new { Value = 30, Text = "30 phút" },
+                        new { Value = 60, Text = "60 phút" },
+                        new { Value = 120, Text = "2 giờ" }
+                    }, "Value", "Text"), new { @class = "form-select" })
+                </div>
+
+                <div class="col-md-12">
+                    <div class="p-3 border rounded bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label font-weight-semibold text-dark mb-0">
+                                <i class="fas fa-robot text-primary me-2"></i>OpenAI API Key (Trợ lý AI Assistant):
+                            </label>
+                            @if (Model != null && Model.IsOpenAiApiKeyConfigured)
+                            {
+                                <span class="badge bg-success"><i class="fas fa-circle-check me-1"></i>Đã cấu hình</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary"><i class="fas fa-circle-minus me-1"></i>Chưa cấu hình (dùng chế độ offline)</span>
+                            }
+                        </div>
+                        <input type="password" name="OpenAiApiKey" class="form-control mb-2" placeholder="@(Model != null && Model.IsOpenAiApiKeyConfigured ? "•••••••••••••••••••••••• (Để trống nếu không muốn đổi)" : "Dán OpenAI API Key (sk-...)")" autocomplete="off" />
+                        <small class="text-muted d-block">
+                            <i class="fas fa-info-circle me-1"></i>Khóa API được lưu trong CSDL `dbo.CauHinhHeThong`. Nếu để trống, Trợ lý AI vẫn hoạt động bằng bộ luật chẩn đoán cục bộ. Nhận khóa tại <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">OpenAI Platform</a>.
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button type="submit" class="btn btn-primary fw-bold px-4 py-2">
+                    <i class="fas fa-save me-1"></i> Lưu cấu hình
+                </button>
+            </div>
+        }
+    </div>
+</div>

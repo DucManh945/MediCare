@@ -1,0 +1,101 @@
+@model MediCare.Models.MedicineGroupListViewModel
+@{
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h2 class="mb-1">Quản lý nhóm thuốc</h2>
+        <p class="text-muted mb-0">Tạo và quản lý danh mục nhóm đang dùng cho kho thuốc.</p>
+    </div>
+    <a class="btn btn-outline-primary" href="@Url.Action("QuanLyThuoc", "ClinicManager")"><i class="fas fa-pills me-1"></i>Quay lại kho thuốc</a>
+</div>
+
+@if (ViewBag.DatabaseError != null)
+{
+    <div class="alert alert-danger">@ViewBag.DatabaseError</div>
+}
+@if (ViewBag.DatabaseWarning != null)
+{
+    <div class="alert alert-warning">@ViewBag.DatabaseWarning</div>
+}
+@if (TempData["MedicineMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["MedicineMessage"]</div>
+}
+@if (TempData["MedicineError"] != null)
+{
+    <div class="alert alert-danger">@TempData["MedicineError"]</div>
+}
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white"><strong>Thêm nhóm thuốc</strong></div>
+    <div class="card-body">
+        @using (Html.BeginForm("ThemNhomThuoc", "ClinicManager", FormMethod.Post, new { @class = "row g-2 align-items-end" }))
+        {
+            @Html.AntiForgeryToken()
+            <div class="col-md-8">
+                @Html.LabelFor(m => m.NewGroupName, "Tên nhóm thuốc", new { @class = "form-label" })
+                @Html.TextBoxFor(m => m.NewGroupName, new { @class = "form-control", maxlength = "100", placeholder = "Ví dụ: Kháng sinh" })
+                @Html.ValidationMessageFor(m => m.NewGroupName, null, new { @class = "text-danger" })
+            </div>
+            <div class="col-md-4"><button type="submit" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Thêm nhóm</button></div>
+        }
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <strong>Danh sách nhóm</strong><span class="badge text-bg-secondary">@Model.Items.Count nhóm</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead><tr><th>Tên nhóm</th><th>Số thuốc đang sử dụng</th><th class="text-end">Thao tác</th></tr></thead>
+            <tbody>
+            @if (Model.Items.Count == 0)
+            {
+                <tr><td colspan="3" class="text-center text-muted py-4">Chưa có nhóm thuốc. Hãy thêm nhóm ở phía trên.</td></tr>
+            }
+            else
+            {
+                foreach (var group in Model.Items)
+                {
+                    <tr>
+                        <td>
+                            @if (ViewBag.DatabaseWarning != null)
+                            {
+                                <span>@group.TenNhomThuoc</span>
+                            }
+                            else
+                            {
+                                using (Html.BeginForm("SuaNhomThuoc", "ClinicManager", FormMethod.Post, new { @class = "d-flex gap-2" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@group.MaNhomThuoc" />
+                                    <input class="form-control" type="text" name="tenNhomThuoc" value="@group.TenNhomThuoc" maxlength="100" required />
+                                    <button type="submit" class="btn btn-outline-primary text-nowrap"><i class="fas fa-save me-1"></i>Lưu tên</button>
+                                }
+                            }
+                        </td>
+                        <td>@group.SoLuongThuoc</td>
+                        <td class="text-end">
+                            @if (ViewBag.DatabaseWarning == null)
+                            {
+                                using (Html.BeginForm("XoaNhomThuoc", "ClinicManager", new { id = group.MaNhomThuoc }, FormMethod.Post, new { @class = "d-inline", onsubmit = "return confirm('Xóa nhóm thuốc này? Nhóm đang được sử dụng không thể xóa.');" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-danger"><i class="fas fa-trash me-1"></i>Xóa</button>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section SidebarNav {
+    @Html.Partial("_ClinicManagerSidebar")
+}

@@ -1,0 +1,43 @@
+@model MediCare.Models.VerifyTwoFactorViewModel
+@{
+    ViewBag.Title = "Xác thực 2FA";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="section py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card shadow border-0 rounded-4 p-4">
+                    <div class="text-center mb-4">
+                        <div class="avatar bg-primary text-white rounded-circle mx-auto d-flex align-items-center justify-content-center mb-3" style="width:60px; height:60px; font-size:1.8rem;">
+                            <i class="fas fa-shield-halved"></i>
+                        </div>
+                        <h4 class="fw-bold">Xác thực Hai Yếu Tố (2FA)</h4>
+                        <p class="text-muted small">Tài khoản của bạn đã bật bảo mật 2FA. Vui lòng mở ứng dụng Google Authenticator và nhập mã OTP 6 chữ số.</p>
+                    </div>
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger py-2 small mb-3">
+                            @Html.ValidationSummary(true, "")
+                        </div>
+                    }
+
+                    @using (Html.BeginForm("VerifyTwoFactor", "Account", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        <div class="mb-4">
+                            <label class="form-label font-weight-semibold">Mã OTP 6 chữ số:</label>
+                            @Html.TextBoxFor(m => m.Code, new { @class = "form-control text-center fs-4 letter-spacing-2", @placeholder = "000000", @maxlength = "6", @autocomplete = "off", @autofocus = "autofocus", @required = "required" })
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold">
+                            <i class="fas fa-check-circle me-1"></i> Xác nhận Đăng nhập
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

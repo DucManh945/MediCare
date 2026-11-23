@@ -1,0 +1,81 @@
+@model MediCare.Models.TwoFactorSetupViewModel
+@{
+    ViewBag.Title = "Thiết lập Xác thực 2FA";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid py-3">
+    @if (TempData["TwoFactorMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4"><i class="fas fa-circle-check me-2"></i>@TempData["TwoFactorMessage"]</div>
+    }
+    @if (TempData["TwoFactorError"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-4"><i class="fas fa-triangle-exclamation me-2"></i>@TempData["TwoFactorError"]</div>
+    }
+
+    <div class="dash-card">
+        <div class="dash-card-header">
+            <h3 class="dash-card-title mb-0">
+                <i class="fas fa-shield-halved text-primary me-2"></i>
+                Bảo mật Tài khoản — Xác thực Hai Yếu Tố (2FA TOTP)
+            </h3>
+        </div>
+
+        <div class="dash-card-body">
+            @if (Model != null && Model.IsEnabled)
+            {
+                <div class="alert alert-success d-flex align-items-center mb-4">
+                    <i class="fas fa-circle-check fs-3 me-3"></i>
+                    <div>
+                        <strong class="d-block">Trạng thái: Đã Bật Bảo Mật 2FA</strong>
+                        <span class="small">Tài khoản của bạn được bảo vệ bằng mã OTP ngẫu nhiên từ ứng dụng Authenticator mỗi khi đăng nhập.</span>
+                    </div>
+                </div>
+
+                using (Html.BeginForm("DisableTwoFactor", "Account", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-danger fw-bold" onclick="return confirm('Bạn có chắc chắn muốn tắt bảo mật 2FA?');">
+                        <i class="fas fa-power-off me-1"></i> Tắt bảo mật 2FA
+                    </button>
+                }
+            }
+            else
+            {
+                <div class="row g-4 align-items-center">
+                    <div class="col-md-5 text-center border-end pe-md-4">
+                        <div class="p-3 bg-white rounded border d-inline-block shadow-sm mb-3">
+                            <img src="@Model.QrCodeUrl" alt="2FA QR Code" class="img-fluid" style="width:200px; height:200px;" />
+                        </div>
+                        <p class="small text-muted mb-1">Mã thiết lập thủ công:</p>
+                        <code class="fs-6 p-2 bg-light rounded border text-primary d-block fw-bold">@Model.SecretKey</code>
+                    </div>
+
+                    <div class="col-md-7 ps-md-4">
+                        <h5 class="fw-bold mb-3"><i class="fas fa-qrcode text-primary me-2"></i>Các bước quét mã & kích hoạt 2FA</h5>
+                        <ol class="small text-secondary mb-4 lh-lg">
+                            <li>Mở ứng dụng <strong>Google Authenticator</strong> hoặc <strong>Microsoft Authenticator</strong> trên điện thoại.</li>
+                            <li>Chọn <strong>Thêm tài khoản</strong> -> <strong>Quét mã QR</strong> ở khung bên cạnh.</li>
+                            <li>Nhập mã OTP 6 chữ số hiển thị trên ứng dụng vào ô dưới đây để xác nhận kích hoạt.</li>
+                        </ol>
+
+                        using (Html.BeginForm("TwoFactorSetup", "Account", FormMethod.Post))
+                        {
+                            @Html.AntiForgeryToken()
+                            <div class="mb-3">
+                                <label class="form-label font-weight-semibold">Nhập mã OTP xác nhận (6 chữ số):</label>
+                                @Html.TextBoxFor(m => m.VerifyCode, new { @class = "form-control form-control-lg text-center fs-4 letter-spacing-2", @placeholder = "000000", @maxlength = "6", @autocomplete = "off", @required = "required" })
+                                @Html.ValidationMessageFor(m => m.VerifyCode, "", new { @class = "text-danger small" })
+                            </div>
+
+                            <button type="submit" class="btn btn-success fw-bold px-4 py-2">
+                                <i class="fas fa-check-double me-1"></i> Xác nhận Kích hoạt 2FA
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

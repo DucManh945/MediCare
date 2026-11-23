@@ -1,0 +1,18 @@
+@model MediCare.Models.DoctorMedicalRecordHistoryViewModel
+@{ Layout = "~/Views/Shared/_DashboardLayout.cshtml"; }
+@section SidebarNav { @Html.Partial("~/Views/Shared/_DoctorSidebar.cshtml") }
+<div class="dash-card"><div class="dash-card-header"><h3 class="dash-card-title"><i class="fas fa-clock-rotate-left me-2"></i>Lịch sử khám của bệnh nhân</h3><a href="@Url.Action("HoSoBenhAn")" class="btn btn-sm btn-outline-secondary">Quay lại hồ sơ bệnh án</a></div><div class="dash-card-body">
+@foreach (var visit in Model.Visits) {
+    <div class="border rounded p-3 mb-3">
+        <div class="d-flex justify-content-between"><strong>@visit.PatientName</strong><span>@visit.Date.ToString("dd/MM/yyyy HH:mm") · @visit.Status</span></div>
+        <div class="small text-muted mb-2">Mã phiếu: @visit.ExaminationId | Mã bệnh nhân: @Model.PatientId | Điện thoại: @(string.IsNullOrWhiteSpace(visit.Phone) ? "—" : visit.Phone)</div>
+        <dl class="row mb-0">
+            <dt class="col-md-2">Sinh hiệu</dt>
+            <dd class="col-md-10">Huyết áp: @(string.IsNullOrWhiteSpace(visit.BloodPressure) ? "—" : visit.BloodPressure + " mmHg"); Mạch: @(visit.Pulse.HasValue ? visit.Pulse.Value.ToString() + " nhịp/phút" : "—"); Nhiệt độ: @(visit.Temperature.HasValue ? visit.Temperature.Value.ToString("0.0") + " °C" : "—"); Cân nặng: @(visit.Weight.HasValue ? visit.Weight.Value.ToString("0.##") + " kg" : "—")</dd>
+            <dt class="col-md-2">Triệu chứng</dt><dd class="col-md-10">@(string.IsNullOrWhiteSpace(visit.Symptoms) ? "—" : visit.Symptoms)</dd>
+            <dt class="col-md-2">Chẩn đoán</dt><dd class="col-md-10">@(string.IsNullOrWhiteSpace(visit.Diagnosis) ? "—" : visit.Diagnosis)</dd>
+            <dt class="col-md-2">Lời dặn</dt><dd class="col-md-10">@(string.IsNullOrWhiteSpace(visit.Instructions) ? "—" : visit.Instructions)</dd>
+        </dl>
+    </div>
+}
+</div></div>

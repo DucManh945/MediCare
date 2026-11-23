@@ -1,0 +1,164 @@
+@model MediCare.Models.BranchManagementViewModel
+@{
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarNav {
+    @Html.Partial("~/Views/Shared/_AdminSidebar.cshtml")
+}
+
+@if (TempData["BranchMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4"><i class="fas fa-circle-check me-2"></i>@TempData["BranchMessage"]</div>
+}
+@if (TempData["BranchError"] != null || ViewBag.Error != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4"><i class="fas fa-triangle-exclamation me-2"></i>@(TempData["BranchError"] ?? ViewBag.Error)</div>
+}
+
+<div class="row g-4">
+    <!-- Danh sách Chi nhánh -->
+    <div class="col-lg-8">
+        <div class="dash-card">
+            <div class="dash-card-header d-flex justify-content-between align-items-center">
+                <h3 class="dash-card-title mb-0">
+                    <i class="fas fa-hospital text-primary me-2"></i>
+                    Danh sách Chi nhánh & Cơ sở Phòng khám MediCare (CSDL)
+                </h3>
+            </div>
+
+            <div class="dash-card-body p-0">
+                <div class="table-responsive">
+                    <table class="dash-table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Mã Cơ sở</th>
+                                <th>Tên Chi nhánh</th>
+                                <th>Địa chỉ & Giám đốc</th>
+                                <th class="text-center">Bác sĩ</th>
+                                <th class="text-center">Lượt khám</th>
+                                <th class="text-center">Trạng thái</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Branches != null && Model.Branches.Count > 0)
+                            {
+                                foreach (var branch in Model.Branches)
+                                {
+                                    <tr>
+                                        <td><strong class="text-primary">@branch.BranchCode</strong></td>
+                                        <td>
+                                            <strong class="text-dark">@branch.BranchName</strong>
+                                            <div class="small text-muted">GĐ: @(string.IsNullOrEmpty(branch.Director) ? "Chưa cập nhật" : branch.Director)</div>
+                                        </td>
+                                        <td class="small text-muted">@branch.Address</td>
+                                        <td class="text-center fw-bold">@branch.DoctorCount</td>
+                                        <td class="text-center fw-bold text-success">@branch.MonthlyVisits lượt</td>
+                                        <td class="text-center">
+                                            <span class="badge-pill @(branch.IsActive ? "badge-success" : "badge-secondary")">
+                                                @(branch.IsActive ? "Hoạt động" : "Tạm ngưng")
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#editBranchModal@(branch.Id)" title="Sửa chi nhánh">
+                                                <i class="fas fa-pen"></i> Sửa
+                                            </button>
+                                            @using (Html.BeginForm("ToggleChiNhanh", "Admin", FormMethod.Post, new { @class = "d-inline" }))
+                                            {
+                                                @Html.AntiForgeryToken()
+                                                @Html.Hidden("id", branch.Id)
+                                                <button type="submit" class="btn btn-sm @(branch.IsActive ? "btn-outline-warning" : "btn-outline-success")" title="Đổi trạng thái">
+                                                    @(branch.IsActive ? "Tạm ngưng" : "Kích hoạt")
+                                                </button>
+                                            }
+
+                                            <!-- Modal Sửa Chi nhánh -->
+                                            <div class="modal fade text-start" id="editBranchModal@(branch.Id)" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        @using (Html.BeginForm("SuaChiNhanh", "Admin", FormMethod.Post))
+                                                        {
+                                                            @Html.AntiForgeryToken()
+                                                            @Html.Hidden("Id", branch.Id)
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">Chỉnh sửa Chi nhánh: @branch.BranchName</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body text-start">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label font-weight-semibold">Mã cơ sở:</label>
+                                                                    <input type="text" class="form-control" value="@branch.BranchCode" readonly />
+                                                                </div>
+                                                                <div class="mb-3">
+                                                                    <label class="form-label font-weight-semibold">Tên chi nhánh:</label>
+                                                                    <input type="text" name="BranchName" class="form-control" value="@branch.BranchName" required />
+                                                                </div>
+                                                                <div class="mb-3">
+                                                                    <label class="form-label font-weight-semibold">Địa chỉ trụ sở:</label>
+                                                                    <input type="text" name="Address" class="form-control" value="@branch.Address" />
+                                                                </div>
+                                                                <div class="mb-3">
+                                                                    <label class="form-label font-weight-semibold">Giám đốc cơ sở:</label>
+                                                                    <input type="text" name="Director" class="form-control" value="@branch.Director" />
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+                                                                <button type="submit" class="btn btn-primary btn-sm fw-bold">Lưu thay đổi</button>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">Chưa có chi nhánh nào trong cơ sở dữ liệu.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thêm Chi nhánh mới -->
+    <div class="col-lg-4">
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <h3 class="dash-card-title mb-0"><i class="fas fa-plus-circle text-success me-2"></i>Thêm Chi nhánh mới</h3>
+            </div>
+            <div class="dash-card-body">
+                @using (Html.BeginForm("ThemChiNhanh", "Admin", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label class="form-label font-weight-semibold">Mã Cơ sở (ví dụ CN-03):</label>
+                        @Html.TextBoxFor(m => m.NewBranch.BranchCode, new { @class = "form-control", placeholder = "CN-03..." })
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label font-weight-semibold">Tên Chi nhánh:</label>
+                        @Html.TextBoxFor(m => m.NewBranch.BranchName, new { @class = "form-control", placeholder = "MediCare Chi nhánh..." })
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label font-weight-semibold">Địa chỉ trụ sở:</label>
+                        @Html.TextBoxFor(m => m.NewBranch.Address, new { @class = "form-control", placeholder = "Số nhà, Đường, Quận/Huyện..." })
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label font-weight-semibold">Giám đốc cơ sở:</label>
+                        @Html.TextBoxFor(m => m.NewBranch.Director, new { @class = "form-control", placeholder = "BS. CKII..." })
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 fw-bold py-2">
+                        <i class="fas fa-save me-1"></i> Thêm Chi nhánh
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</div>

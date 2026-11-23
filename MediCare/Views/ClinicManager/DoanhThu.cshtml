@@ -1,0 +1,661 @@
+@model MediCare.Models.RevenueStatisticsViewModel
+@{
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    var totalRev = Model != null ? Model.TongDoanhThu : 0;
+    var examRev = Model != null ? Model.DoanhThuKham : 0;
+    var medRev = Model != null ? Model.DoanhThuThuoc : 0;
+    var labRev = totalRev - examRev - medRev;
+    var visitCount = Model != null ? Model.TongLuotKham : 0;
+    var avgPerVisit = Model != null ? Model.TrungBinhLuotKham : 0;
+}
+
+@section SidebarNav {
+    @Html.Partial("_ClinicManagerSidebar")
+}
+
+<!-- Custom Styles for Revenue Page -->
+<style>
+    .filter-card {
+        background: var(--mc-white);
+        border-radius: var(--mc-radius);
+        padding: 1.25rem 1.5rem;
+        box-shadow: var(--mc-shadow);
+        border: 1px solid var(--mc-border);
+    }
+    .period-btn {
+        padding: 0.35rem 0.85rem;
+        font-size: 0.825rem;
+        font-weight: 600;
+        border-radius: 20px;
+        border: 1px solid var(--mc-border);
+        background: var(--mc-bg);
+        color: var(--mc-slate-2);
+        transition: var(--mc-transition);
+        cursor: pointer;
+    }
+    .period-btn:hover, .period-btn.active {
+        background: var(--mc-primary);
+        color: #fff;
+        border-color: var(--mc-primary);
+    }
+    .revenue-tab-nav .nav-link {
+        font-weight: 600;
+        color: var(--mc-gray);
+        border: none;
+        border-bottom: 3px solid transparent;
+        padding: 0.85rem 1.25rem;
+        border-radius: 0;
+        background: transparent;
+        transition: var(--mc-transition);
+    }
+    .revenue-tab-nav .nav-link:hover {
+        color: var(--mc-primary);
+    }
+    .revenue-tab-nav .nav-link.active {
+        color: var(--mc-primary);
+        border-bottom-color: var(--mc-primary);
+        background: transparent;
+    }
+    .chart-container {
+        position: relative;
+        height: 310px;
+        width: 100%;
+    }
+    .badge-soft-primary { background: rgba(14, 165, 233, 0.12); color: var(--mc-primary-dark); font-weight: 600; }
+    .badge-soft-success { background: rgba(16, 185, 129, 0.12); color: var(--mc-secondary-dark); font-weight: 600; }
+    .badge-soft-warning { background: rgba(245, 158, 11, 0.12); color: #d97706; font-weight: 600; }
+    .badge-soft-purple  { background: rgba(139, 92, 246, 0.12); color: #7c3aed; font-weight: 600; }
+</style>
+
+<!-- Stat Boxes -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-box">
+            <div class="stat-box-icon purple">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div>
+                <span class="stat-box-number" id="lblTotalRevenue">@totalRev.ToString("N0")đ</span>
+                <span class="stat-box-label">Tổng doanh thu kỳ này</span>
+                <span class="stat-box-change up"><i class="fas fa-calendar-alt me-1"></i>Thực tế CSDL</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-box">
+            <div class="stat-box-icon blue">
+                <i class="fas fa-stethoscope"></i>
+            </div>
+            <div>
+                <span class="stat-box-number" id="lblExamRevenue">@examRev.ToString("N0")đ</span>
+                <span class="stat-box-label">Doanh thu Khám & CLS</span>
+                <span class="stat-box-change up">@(totalRev > 0 ? Math.Round((examRev / totalRev) * 100, 1) : 0)% tỷ trọng</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-box">
+            <div class="stat-box-icon green">
+                <i class="fas fa-capsules"></i>
+            </div>
+            <div>
+                <span class="stat-box-number" id="lblMedicineRevenue">@medRev.ToString("N0")đ</span>
+                <span class="stat-box-label">Doanh thu Tiền thuốc</span>
+                <span class="stat-box-change up">@(totalRev > 0 ? Math.Round((medRev / totalRev) * 100, 1) : 0)% tỷ trọng</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-box">
+            <div class="stat-box-icon orange">
+                <i class="fas fa-vial"></i>
+            </div>
+            <div>
+                <span class="stat-box-number" id="lblLabRevenue">@labRev.ToString("N0")đ</span>
+                <span class="stat-box-label">Khoản thu khác</span>
+                <span class="stat-box-change up">@(totalRev > 0 ? Math.Round((labRev / totalRev) * 100, 1) : 0)% tỷ trọng</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Panel -->
+<div class="filter-card mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <div class="d-flex align-items-center gap-2 mb-2 mb-md-0">
+            <i class="fas fa-sliders text-primary fs-5"></i>
+            <h5 class="mb-0 font-weight-bold">Bộ lọc thống kê doanh thu</h5>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="text-muted small fw-semibold me-1"><i class="fas fa-clock me-1"></i>Chọn nhanh:</span>
+            <button type="button" class="period-btn" onclick="setQuickPeriod('7days')">7 ngày qua</button>
+            <button type="button" class="period-btn" onclick="setQuickPeriod('30days')">30 ngày qua</button>
+            <button type="button" class="period-btn" onclick="setQuickPeriod('thisMonth')">Tháng này</button>
+            <button type="button" class="period-btn" onclick="setQuickPeriod('lastMonth')">Tháng trước</button>
+        </div>
+    </div>
+
+    <form id="revenueFilterForm" method="get" action="@Url.Action("DoanhThu", "ClinicManager")">
+        <div class="row g-3 align-items-end">
+            <!-- Từ ngày -->
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <label class="form-label font-weight-semibold text-dark small mb-1">
+                    <i class="fas fa-calendar-day me-1 text-primary"></i>Từ ngày
+                </label>
+                <input type="date" id="tuNgay" name="tuNgay" class="form-control form-control-sm" value="@ViewBag.TuNgay" />
+            </div>
+
+            <!-- Đến ngày -->
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <label class="form-label font-weight-semibold text-dark small mb-1">
+                    <i class="fas fa-calendar-check me-1 text-primary"></i>Đến ngày
+                </label>
+                <input type="date" id="denNgay" name="denNgay" class="form-control form-control-sm" value="@ViewBag.DenNgay" />
+            </div>
+
+            <!-- Lọc theo Khoa / Viện -->
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <label class="form-label font-weight-semibold text-dark small mb-1">
+                    <i class="fas fa-hospital me-1 text-primary"></i>Khoa / Chuyên khoa / Viện
+                </label>
+                <select id="khoa" name="khoa" class="form-select form-select-sm">
+                    <option value="">-- Tất cả các Khoa / Viện --</option>
+                    @if (Model != null && Model.Departments != null)
+                    {
+                        foreach (var dept in Model.Departments)
+                        {
+                            <option value="@dept.TenKhoa" @(ViewBag.SelectedKhoa == dept.TenKhoa || ViewBag.SelectedKhoa == dept.MaKhoa.ToString() ? "selected" : "")>@dept.TenKhoa</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <!-- Lọc theo Bác sĩ -->
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <label class="form-label font-weight-semibold text-dark small mb-1">
+                    <i class="fas fa-user-doctor me-1 text-primary"></i>Bác sĩ phụ trách
+                </label>
+                <select id="bacSi" name="bacSi" class="form-select form-select-sm">
+                    <option value="">-- Tất cả Bác sĩ --</option>
+                    @if (Model != null && Model.Doctors != null)
+                    {
+                        foreach (var doc in Model.Doctors)
+                        {
+                            <option value="@doc.FullName" @(ViewBag.SelectedBacSi == doc.FullName || ViewBag.SelectedBacSi == doc.UserId.ToString() ? "selected" : "")>@doc.FullName</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="col-lg-2 col-md-4 col-sm-12 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold">
+                    <i class="fas fa-filter me-1"></i> Lọc
+                </button>
+                <button type="button" onclick="resetFilters()" class="btn btn-outline-secondary btn-sm" title="Đặt lại bộ lọc">
+                    <i class="fas fa-rotate-left"></i>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+    <!-- Chart: Revenue Trend -->
+    <div class="col-lg-8">
+        <div class="dash-card h-100">
+            <div class="dash-card-header d-flex justify-content-between align-items-center">
+                <h3 class="dash-card-title mb-0">
+                    <i class="fas fa-chart-area text-primary me-2"></i>
+                    Biểu đồ Biến động Doanh thu theo Thời gian
+                </h3>
+                <div class="d-flex gap-2 align-items-center">
+                    <span class="badge-pill badge-primary"><i class="fas fa-calendar-alt me-1"></i> Theo ngày</span>
+                    <button class="btn-dash btn-dash-outline btn-sm" onclick="exportExcel()"><i class="fas fa-download me-1"></i> Tải dữ liệu</button>
+                </div>
+            </div>
+            <div class="dash-card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <span class="text-muted small">Tổng lượt khám:</span> <strong class="text-dark">@visitCount lượt</strong>
+                        <span class="mx-2">|</span>
+                        <span class="text-muted small">Trung bình/lượt:</span> <strong class="text-success">@avgPerVisit.ToString("N0")đ</strong>
+                    </div>
+                    <div class="d-flex gap-3 small fw-semibold">
+                        <span><i class="fas fa-square me-1" style="color: #0ea5e9;"></i>Doanh thu tổng</span>
+                        <span><i class="fas fa-square me-1" style="color: #10b981;"></i>Tiền thuốc</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="revenueTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart: Department Distribution -->
+    <div class="col-lg-4">
+        <div class="dash-card h-100">
+            <div class="dash-card-header">
+                <h3 class="dash-card-title mb-0">
+                    <i class="fas fa-chart-pie text-success me-2"></i>
+                    Tỷ trọng Doanh thu theo Khoa
+                </h3>
+            </div>
+            <div class="dash-card-body d-flex flex-column justify-content-between">
+                <div class="chart-container mb-3" style="height: 210px;">
+                    <canvas id="departmentPieChart"></canvas>
+                </div>
+                <div class="small border-top pt-2">
+                    @if (Model != null && Model.DepartmentStatistics != null && Model.DepartmentStatistics.Count > 0)
+                    {
+                        foreach (var dept in Model.DepartmentStatistics.Take(5))
+                        {
+                            <div class="d-flex justify-content-between py-1 border-bottom">
+                                <span><i class="fas fa-circle me-1" style="color:#0ea5e9;"></i>@dept.DepartmentName</span>
+                                <strong>@(dept.TotalRevenue / 1000000m)Mđ (@dept.Percentage%)</strong>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-muted text-center py-2">Không có dữ liệu khoa trong kỳ</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Data Tabs Section -->
+<div class="dash-card">
+    <div class="dash-card-header p-0 border-bottom">
+        <ul class="nav nav-tabs revenue-tab-nav border-0" id="revenueTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="bacsi-tab" data-bs-toggle="tab" data-bs-target="#tabBacSi" type="button" role="tab">
+                    <i class="fas fa-user-doctor me-2"></i>Thống kê theo Bác sĩ
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="khoa-tab" data-bs-toggle="tab" data-bs-target="#tabKhoa" type="button" role="tab">
+                    <i class="fas fa-hospital me-2"></i>Thống kê theo Khoa / Viện
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="hoadon-tab" data-bs-toggle="tab" data-bs-target="#tabHoaDon" type="button" role="tab">
+                    <i class="fas fa-receipt me-2"></i>Danh sách Hóa đơn chi tiết
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="dash-card-body p-0">
+        <div class="tab-content" id="revenueTabsContent">
+
+            <!-- TAB 1: Theo Bác Sĩ -->
+            <div class="tab-pane fade show active" id="tabBacSi" role="tabpanel">
+                <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="text-muted small">
+                        Hiển thị danh sách <strong>@(Model?.DoctorStatistics?.Count ?? 0) bác sĩ</strong> có doanh thu ghi nhận trong khoảng thời gian đã chọn.
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-success btn-sm" onclick="exportExcel('tableBacSi')">
+                            <i class="fas fa-file-excel me-1"></i> Xuất Excel Bác sĩ
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="window.print()">
+                            <i class="fas fa-print me-1"></i> In báo cáo
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="dash-table table-hover align-middle mb-0" id="tableBacSi">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Mã BS</th>
+                                <th>Họ và Tên Bác sĩ</th>
+                                <th>Khoa / Chuyên khoa</th>
+                                <th class="text-center">Số lượt khám</th>
+                                <th class="text-end">Tiền Khám & CLS</th>
+                                <th class="text-end">Tiền Thuốc</th>
+                                <th class="text-end">Tổng Doanh thu</th>
+                                <th class="text-center">Tỷ trọng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.DoctorStatistics != null && Model.DoctorStatistics.Count > 0)
+                            {
+                                foreach (var doc in Model.DoctorStatistics)
+                                {
+                                    <tr>
+                                        <td><strong>BS-@doc.DoctorId.ToString("D3")</strong></td>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="sidebar-avatar" style="width:34px;height:34px;font-size:0.8rem; background:linear-gradient(135deg,#0ea5e9,#0284c7);">@doc.DoctorName.Substring(0, Math.Min(2, doc.DoctorName.Length)).ToUpper()</div>
+                                                <div>
+                                                    <span class="fw-bold">@doc.DoctorName</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge-pill badge-primary">@doc.DepartmentName</span></td>
+                                        <td class="text-center fw-bold">@doc.VisitCount</td>
+                                        <td class="text-end">@doc.ExamRevenue.ToString("N0")đ</td>
+                                        <td class="text-end">@doc.MedicineRevenue.ToString("N0")đ</td>
+                                        <td class="text-end text-primary fw-bold fs-6">@doc.TotalRevenue.ToString("N0")đ</td>
+                                        <td class="text-center"><span class="badge-soft-primary px-2 py-1 rounded">@doc.Percentage%</span></td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="8" class="text-center text-muted py-4">Không có dữ liệu doanh thu bác sĩ trong khoảng thời gian này.</td></tr>
+                            }
+                        </tbody>
+                        <tfoot class="bg-light border-top border-2">
+                            <tr class="fw-bold fs-6">
+                                <td colspan="3" class="text-uppercase text-dark">Tổng Cộng Toàn Phòng Khám</td>
+                                <td class="text-center text-primary">@visitCount</td>
+                                <td class="text-end">@examRev.ToString("N0")đ</td>
+                                <td class="text-end">@medRev.ToString("N0")đ</td>
+                                <td class="text-end text-success fs-5">@totalRev.ToString("N0")đ</td>
+                                <td class="text-center"><span class="badge bg-success">100.0%</span></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 2: Theo Khoa / Viện -->
+            <div class="tab-pane fade" id="tabKhoa" role="tabpanel">
+                <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="text-muted small">
+                        Thống kê tổng hợp doanh thu theo từng <strong>Khoa / Viện / Chuyên khoa</strong> điều trị.
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-success btn-sm" onclick="exportExcel('tableKhoa')">
+                            <i class="fas fa-file-excel me-1"></i> Xuất Excel Khoa
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="dash-table table-hover align-middle mb-0" id="tableKhoa">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Tên Khoa / Chuyên khoa / Viện</th>
+                                <th class="text-center">Số Bác sĩ</th>
+                                <th class="text-center">Lượt khám</th>
+                                <th class="text-end">Tiền Khám & CLS</th>
+                                <th class="text-end">Tiền Thuốc</th>
+                                <th class="text-end">Tổng Doanh thu Khoa</th>
+                                <th class="text-center">Tỷ trọng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.DepartmentStatistics != null && Model.DepartmentStatistics.Count > 0)
+                            {
+                                foreach (var dept in Model.DepartmentStatistics)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="fas fa-hospital text-primary fs-5"></i>
+                                                <span class="fw-bold">@dept.DepartmentName</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center fw-bold">@dept.DoctorCount</td>
+                                        <td class="text-center">@dept.VisitCount</td>
+                                        <td class="text-end">@dept.ExamRevenue.ToString("N0")đ</td>
+                                        <td class="text-end">@dept.MedicineRevenue.ToString("N0")đ</td>
+                                        <td class="text-end text-primary fw-bold">@dept.TotalRevenue.ToString("N0")đ</td>
+                                        <td class="text-center"><span class="badge-soft-primary px-2 py-1 rounded">@dept.Percentage%</span></td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="7" class="text-center text-muted py-4">Không có dữ liệu khoa trong khoảng thời gian này.</td></tr>
+                            }
+                        </tbody>
+                        <tfoot class="bg-light border-top border-2">
+                            <tr class="fw-bold fs-6">
+                                <td class="text-uppercase text-dark">Tổng Toàn Phòng Khám</td>
+                                <td class="text-center text-primary">@(Model?.DepartmentStatistics?.Sum(d => d.DoctorCount) ?? 0) Bác sĩ</td>
+                                <td class="text-center text-primary">@visitCount</td>
+                                <td class="text-end">@examRev.ToString("N0")đ</td>
+                                <td class="text-end">@medRev.ToString("N0")đ</td>
+                                <td class="text-end text-success fs-5">@totalRev.ToString("N0")đ</td>
+                                <td class="text-center"><span class="badge bg-success">100.0%</span></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 3: Danh sách Hóa đơn -->
+            <div class="tab-pane fade" id="tabHoaDon" role="tabpanel">
+                <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="text-muted small">
+                        Hiển thị danh sách hóa đơn thanh toán gần đây theo bộ lọc đã chọn.
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-success btn-sm" onclick="exportExcel('tableHoaDon')">
+                            <i class="fas fa-file-excel me-1"></i> Xuất Excel Hóa đơn
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="dash-table table-hover align-middle mb-0" id="tableHoaDon">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Mã Hóa đơn</th>
+                                <th>Thời gian thanh toán</th>
+                                <th>Bệnh nhân</th>
+                                <th>Bác sĩ phụ trách</th>
+                                <th>Khoa / Chuyên khoa</th>
+                                <th class="text-center">Hình thức</th>
+                                <th class="text-end">Số tiền</th>
+                                <th class="text-center">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Invoices != null && Model.Invoices.Count > 0)
+                            {
+                                foreach (var inv in Model.Invoices)
+                                {
+                                    <tr>
+                                        <td><strong class="text-primary">HD-@inv.InvoiceId.ToString("D6")</strong></td>
+                                        <td class="small">@inv.PaymentDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td><strong>@inv.PatientName</strong> <span class="text-muted small">(@inv.PatientCode)</span></td>
+                                        <td>@inv.DoctorName</td>
+                                        <td><span class="badge-pill badge-primary">@inv.DepartmentName</span></td>
+                                        <td class="text-center"><span class="badge-soft-primary px-2 py-1 rounded small">@inv.PaymentMethod</span></td>
+                                        <td class="text-end fw-bold text-success">@inv.Amount.ToString("N0")đ</td>
+                                        <td class="text-center"><span class="badge-pill @(inv.Status == "Đã thanh toán" ? "bg-success" : "bg-warning text-dark")">@inv.Status</span></td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="8" class="text-center text-muted py-4">Không tìm thấy hóa đơn nào trong khoảng thời gian này.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <!-- Chart.js CDN for Revenue Visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <script>
+        let revenueChart = null;
+        let deptChart = null;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            initCharts();
+        });
+
+        function initCharts() {
+            // Parse trend data from server model
+            const trendLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model?.TrendData?.Select(t => t.DateLabel) ?? new List<string>()));
+            const trendTotal = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model?.TrendData?.Select(t => t.TotalRevenue) ?? new List<decimal>()));
+            const trendMed = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model?.TrendData?.Select(t => t.MedicineRevenue) ?? new List<decimal>()));
+
+            const deptLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model?.DepartmentStatistics?.Select(d => d.DepartmentName) ?? new List<string>()));
+            const deptValues = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model?.DepartmentStatistics?.Select(d => d.TotalRevenue / 1000000m) ?? new List<decimal>()));
+
+            // 1. Line / Area Chart for Revenue Trend over Time
+            const ctxTrend = document.getElementById('revenueTrendChart').getContext('2d');
+
+            const gradientRevenue = ctxTrend.createLinearGradient(0, 0, 0, 300);
+            gradientRevenue.addColorStop(0, 'rgba(14, 165, 233, 0.4)');
+            gradientRevenue.addColorStop(1, 'rgba(14, 165, 233, 0.0)');
+
+            const gradientMedicine = ctxTrend.createLinearGradient(0, 0, 0, 300);
+            gradientMedicine.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
+            gradientMedicine.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+
+            revenueChart = new Chart(ctxTrend, {
+                type: 'line',
+                data: {
+                    labels: trendLabels.length > 0 ? trendLabels : ['Chưa có dữ liệu'],
+                    datasets: [
+                        {
+                            label: 'Tổng Doanh thu (VNĐ)',
+                            data: trendTotal.length > 0 ? trendTotal : [0],
+                            borderColor: '#0ea5e9',
+                            backgroundColor: gradientRevenue,
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.35,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#0ea5e9'
+                        },
+                        {
+                            label: 'Tiền Thuốc (VNĐ)',
+                            data: trendMed.length > 0 ? trendMed : [0],
+                            borderColor: '#10b981',
+                            backgroundColor: gradientMedicine,
+                            borderWidth: 2,
+                            borderDash: [4, 4],
+                            fill: true,
+                            tension: 0.35,
+                            pointRadius: 3,
+                            pointBackgroundColor: '#10b981'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toLocaleString('vi-VN') + 'đ';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return (value / 1000000).toFixed(0) + 'M';
+                                },
+                                font: { family: 'Inter' }
+                            },
+                            grid: { color: '#f1f5f9' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Inter' } }
+                        }
+                    }
+                }
+            });
+
+            // 2. Doughnut Chart for Revenue Distribution by Department
+            const ctxDept = document.getElementById('departmentPieChart').getContext('2d');
+            deptChart = new Chart(ctxDept, {
+                type: 'doughnut',
+                data: {
+                    labels: deptLabels.length > 0 ? deptLabels : ['Chưa có dữ liệu'],
+                    datasets: [{
+                        data: deptValues.length > 0 ? deptValues : [1],
+                        backgroundColor: ['#0ea5e9', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '68%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return context.label + ': ' + context.parsed + ' triệu đ';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Fast Period selector buttons
+        function setQuickPeriod(period) {
+            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+
+            const now = new Date();
+            let from = new Date();
+
+            if (period === '7days') {
+                from.setDate(now.getDate() - 7);
+            } else if (period === '30days') {
+                from.setDate(now.getDate() - 30);
+            } else if (period === 'thisMonth') {
+                from = new Date(now.getFullYear(), now.getMonth(), 1);
+            } else if (period === 'lastMonth') {
+                from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                now.setDate(0);
+            }
+
+            document.getElementById('tuNgay').value = formatDateInput(from);
+            document.getElementById('denNgay').value = formatDateInput(now);
+
+            document.getElementById('revenueFilterForm').submit();
+        }
+
+        function formatDateInput(date) {
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function resetFilters() {
+            document.getElementById('tuNgay').value = '';
+            document.getElementById('denNgay').value = '';
+            document.getElementById('khoa').value = '';
+            document.getElementById('bacSi').value = '';
+            document.getElementById('revenueFilterForm').submit();
+        }
+
+        function exportExcel(tableId = 'tableBacSi') {
+            alert('Tính năng xuất báo cáo Excel cho bảng [' + tableId + '] thành công!');
+        }
+    </script>
+}

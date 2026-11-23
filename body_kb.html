@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kh&#225;m bệnh L&#226;m s&#224;ng (SOAP) - MediCare Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link href="/Content/bootstrap.css" rel="stylesheet"/>
+<link href="/Content/site.css" rel="stylesheet"/>
+
+    <script src="/Scripts/modernizr-2.8.3.js"></script>
+
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-wrapper">
+        <aside class="dashboard-sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="d-flex align-items-center gap-2 text-decoration-none">
+                    <div class="sidebar-logo-icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div>
+                        <span class="sidebar-logo-primary">Medi</span><span class="sidebar-logo-secondary">Care</span>
+                        <small class="sidebar-role">B&#225;c sĩ</small>
+                    </div>
+                </a>
+            </div>
+            <nav class="sidebar-nav" aria-label="Điều hướng quản lý">
+                
+    
+<div class="sidebar-menu-title">CHUNG</div>
+<a href="/Doctor" class="sidebar-link "><i class="fas fa-gauge-high"></i><span>Tổng quan</span></a>
+<div class="sidebar-menu-title mt-3">NGHIỆP VỤ Y KHOA</div>
+<a href="/Doctor/KhamBenh" class="sidebar-link active"><i class="fas fa-stethoscope"></i><span>Khám bệnh (SOAP)</span></a>
+<a href="/Doctor/PhieuKham?destination=ChiDinhCLS" class="sidebar-link "><i class="fas fa-microscope"></i><span>Chỉ định & Kết quả CLS</span></a>
+<a href="/Doctor/PhieuKham?destination=KeDonThuoc" class="sidebar-link "><i class="fas fa-prescription-bottle-medical"></i><span>Kê đơn thuốc</span></a>
+<a href="/Doctor/HoSoBenhAn" class="sidebar-link "><i class="fas fa-folder-open"></i><span>Hồ sơ bệnh án (EMR)</span></a>
+<a href="/Doctor/LichHen" class="sidebar-link "><i class="fas fa-calendar-check"></i><span>Lịch hẹn & Hàng đợi</span></a>
+
+
+            </nav>
+            <div class="sidebar-footer">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="sidebar-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div style="flex:1; min-width:0;">
+                        <div class="sidebar-user-name">bs_nam</div>
+                        <div class="sidebar-user-role">B&#225;c sĩ</div>
+                    </div>
+                </div>
+                <form method="post" action="/Account/LogoutPost" class="w-100">
+                    <input name="__RequestVerificationToken" type="hidden" value="IjPf2kmaJLQWy_Uf2g16Hb1miZ4rm1V6bbKMTTzogibWyWSUPW3WiilONZ8EuIm4QaIBd4FPTzGXI_WLDAUw02ydDmeJVJrjE-VL3_vxwqo1" />
+                    <button type="submit" class="btn btn-logout w-100">
+                        <i class="fas fa-right-from-bracket me-2"></i>Đăng xuất
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <div class="dashboard-main">
+            <header class="dashboard-topbar">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn-topbar-icon sidebar-toggle d-lg-none" title="Mở menu">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <div>
+                            <h1 class="topbar-title mb-0">Kh&#225;m bệnh L&#226;m s&#224;ng (SOAP)</h1>
+                            <div class="topbar-breadcrumb">
+                                <i class="fas fa-home me-1"></i>
+                                <a href="/">Trang chủ</a>
+                                <span class="mx-2">/</span>
+                                <span>Kh&#225;m bệnh L&#226;m s&#224;ng (SOAP)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn-topbar-icon" title="Thông báo">
+                            <i class="fas fa-bell"></i>
+                            <span class="topbar-badge">3</span>
+                        </button>
+                        <button class="btn-topbar-icon" title="Tin nhắn">
+                            <i class="fas fa-envelope"></i>
+                        </button>
+                        <div class="topbar-user">
+                            <div class="sidebar-avatar" style="width:40px; height:40px; font-size:0.95rem;">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="dashboard-content">
+                
+
+ <div class="alert alert-info">Chọn lịch hẹn được ph&#226;n c&#244;ng để mở phiếu kh&#225;m SOAP.</div> <div class="dash-card">
+        <div class="dash-card-header"><h3 class="dash-card-title"><i class="fas fa-stethoscope"></i>Chọn lịch hẹn để mở Phiếu khám SOAP</h3></div>
+        <div class="dash-card-body border-bottom">
+                <div class="alert alert-info mb-0">Chưa có lịch hẹn được phân công cho bác sĩ. Hãy mở lịch hẹn và chọn một cuộc hẹn để bắt đầu khám.</div>
+                <a href="/Doctor/LichHen" class="btn btn-sm btn-outline-primary mt-2">Quay lại lịch hẹn</a>
+        </div>
+</div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="/Scripts/jquery-3.7.0.js"></script>
+
+    <script src="/Scripts/bootstrap.bundle.js"></script>
+<script src="/Scripts/site.js"></script>
+
+    
+    <style>
+        .dashboard-sidebar .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: .35rem;
+            width: 100%;
+        }
+        .dashboard-sidebar .sidebar-nav > .sidebar-nav-item {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            width: 100%;
+            min-height: 44px;
+            box-sizing: border-box;
+            padding: .7rem 1rem;
+            gap: .75rem;
+            white-space: nowrap;
+            line-height: 1.25;
+            text-decoration: none;
+        }
+        .dashboard-sidebar .sidebar-nav > .sidebar-nav-item > i {
+            flex: 0 0 1.25rem;
+            width: 1.25rem;
+            text-align: center;
+        }
+        .dashboard-sidebar .sidebar-nav > .sidebar-nav-item > span {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    </style>
+</body>
+</html>

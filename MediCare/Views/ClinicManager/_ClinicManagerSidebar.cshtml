@@ -1,0 +1,97 @@
+@{
+    var actionName = ViewContext.RouteData.Values["action"]?.ToString();
+    var currentActive = (ViewBag.ActiveManagerMenu ?? "") as string;
+    if (string.IsNullOrWhiteSpace(currentActive) && !string.IsNullOrWhiteSpace(actionName))
+    {
+        if (actionName == "Index")
+        {
+            currentActive = "overview";
+        }
+        else if (actionName == "QuanLyThuoc")
+        {
+            currentActive = "medicine";
+        }
+        else if (actionName == "QuanLyNhomThuoc")
+        {
+            currentActive = "medicine-group";
+        }
+        else if (actionName == "QuanLyTaiKhoan" || actionName == "ThemTaiKhoan" || actionName == "SuaTaiKhoan")
+        {
+            currentActive = "accounts";
+        }
+        else if (actionName == "LichHen")
+        {
+            currentActive = "appointments";
+        }
+        else if (actionName == "HoSoBenhAn")
+        {
+            currentActive = "records";
+        }
+        else if (actionName == "DoanhThu")
+        {
+            currentActive = "revenue";
+        }
+        else if (actionName == "CaiDat")
+        {
+            currentActive = "settings";
+        }
+        else if (actionName == "BaoCao")
+        {
+            currentActive = "reports";
+        }
+        else if (actionName == "ThongTinCaNhan")
+        {
+            currentActive = "profile";
+        }
+    }
+}
+
+<div class="sidebar-menu-title">Chung</div>
+<a href="@Url.Action("Index", "ClinicManager")" class="sidebar-link @(currentActive == "overview" ? "active" : "")">
+    <i class="fas fa-gauge-high"></i>
+    <span>Tổng quan</span>
+</a>
+<a href="@Url.Action("ThongTinCaNhan", "Account")" class="sidebar-link @(currentActive == "profile" ? "active" : "")">
+    <i class="fas fa-user-pen"></i>
+    <span>Thông tin cá nhân</span>
+</a>
+
+<div class="sidebar-menu-title mt-3">Quản lý</div>
+<a href="@Url.Action("QuanLyThuoc", "ClinicManager")" class="sidebar-link @(currentActive == "medicine" ? "active" : "")">
+    <i class="fas fa-capsules"></i>
+    <span>Quản lý thuốc</span>
+</a>
+<a href="@Url.Action("QuanLyNhomThuoc", "ClinicManager")" class="sidebar-link @(currentActive == "medicine-group" ? "active" : "")">
+    <i class="fas fa-layer-group"></i>
+    <span>Nhóm thuốc</span>
+</a>
+<a href="@Url.Action("QuanLyTaiKhoan", "ClinicManager")" class="sidebar-link @(currentActive == "accounts" ? "active" : "")">
+    <i class="fas fa-users-gear"></i>
+    <span>Quản lý tài khoản</span>
+</a>
+<a href="@Url.Action("LichHen", "ClinicManager")" class="sidebar-link @(currentActive == "appointments" ? "active" : "")">
+    <i class="fas fa-calendar-check"></i>
+    <span>Quản lý lịch hẹn</span>
+</a>
+<a href="@Url.Action("HoSoBenhAn", "ClinicManager")" class="sidebar-link @(currentActive == "records" ? "active" : "")">
+    <i class="fas fa-folder-open"></i>
+    <span>Tra cứu hồ sơ</span>
+</a>
+<a href="@Url.Action("QuanLyTinNhanLienHe", "ClinicManager")" class="sidebar-link @(currentActive == "contacts" ? "active" : "")">
+    <i class="fas fa-envelope-open-text"></i>
+    <span>Tin nhắn liên hệ</span>
+</a>
+
+<div class="sidebar-menu-title mt-3">Hệ thống</div>
+<a href="@Url.Action("DoanhThu", "ClinicManager")" class="sidebar-link @(currentActive == "revenue" ? "active" : "")">
+    <i class="fas fa-file-invoice-dollar"></i>
+    <span>Doanh thu</span>
+</a>
+<a href="@Url.Action("CaiDat", "ClinicManager")" class="sidebar-link @(currentActive == "settings" ? "active" : "")">
+    <i class="fas fa-gear"></i>
+    <span>Cài đặt</span>
+</a>
+<a href="@Url.Action("BaoCao", "ClinicManager")" class="sidebar-link @(currentActive == "reports" ? "active" : "")">
+    <i class="fas fa-chart-pie"></i>
+    <span>Báo cáo</span>
+</a>

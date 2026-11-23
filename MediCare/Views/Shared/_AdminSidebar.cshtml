@@ -1,0 +1,41 @@
+@{
+    var active = ViewBag.ActiveAdminMenu as string ?? "";
+}
+
+<div class="sidebar-menu-title">Chung</div>
+<a href="@Url.Action("Index", "Admin")" class="sidebar-link @(active == "index" || string.IsNullOrEmpty(active) ? "active" : "")">
+    <i class="fas fa-gauge-high"></i>
+    <span>Tổng quan hệ thống</span>
+</a>
+
+<div class="sidebar-menu-title mt-3">Quản lý cao cấp</div>
+<a href="@Url.Action("QuanLyQuyen", "Admin")" class="sidebar-link @(active == "roles" ? "active" : "")">
+    <i class="fas fa-users-gear"></i>
+    <span>Quản lý Role & quyền</span>
+</a>
+<a href="@Url.Action("QuanLyChiNhanh", "Admin")" class="sidebar-link @(active == "branches" ? "active" : "")">
+    <i class="fas fa-hospital"></i>
+    <span>Quản lý chi nhánh</span>
+</a>
+<a href="@Url.Action("SaoLuuDuLieu", "Admin")" class="sidebar-link @(active == "backup" ? "active" : "")">
+    <i class="fas fa-database"></i>
+    <span>Sao lưu & phục hồi</span>
+</a>
+<a href="@Url.Action("NhatKyHoatDong", "Admin")" class="sidebar-link @(active == "audit" ? "active" : "")">
+    <i class="fas fa-scroll"></i>
+    <span>Nhật ký hoạt động</span>
+</a>
+<a href="@Url.Action("BaoMat", "Admin")" class="sidebar-link @(active == "security" ? "active" : "")">
+    <i class="fas fa-shield-halved"></i>
+    <span>Bảo mật hệ thống</span>
+</a>
+
+<div class="sidebar-menu-title mt-3">Cấu hình</div>
+<a href="@Url.Action("CauHinh", "Admin")" class="sidebar-link @(active == "config" ? "active" : "")">
+    <i class="fas fa-sliders"></i>
+    <span>Cấu hình chung</span>
+</a>
+<a href="@Url.Action("KetNoiApi", "Admin")" class="sidebar-link @(active == "api" ? "active" : "")">
+    <i class="fas fa-circle-nodes"></i>
+    <span>Kết nối & API</span>
+</a>

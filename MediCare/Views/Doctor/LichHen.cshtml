@@ -1,0 +1,104 @@
+@model MediCare.Models.DoctorAppointmentListViewModel
+@using System.Linq
+@{ Layout = "~/Views/Shared/_DashboardLayout.cshtml"; }
+@section SidebarNav {
+    @Html.Partial("~/Views/Shared/_DoctorSidebar.cshtml")
+}
+@if (ViewBag.DatabaseError != null) { <div class="alert alert-warning">@ViewBag.DatabaseError</div> }
+@if (TempData["Message"] != null) { <div class="alert alert-info">@TempData["Message"]</div> }
+<div class="dash-card">
+    @if (ViewBag.Destination == "KhamBenh")
+    {
+        <div class="dash-card-header"><h3 class="dash-card-title"><i class="fas fa-stethoscope"></i>Chọn lịch hẹn để mở Phiếu khám SOAP</h3></div>
+        <div class="dash-card-body border-bottom">
+            @if (Model.Items.Any())
+            {
+                <div class="table-responsive"><table class="dash-table"><thead><tr><th>STT</th><th>Giờ</th><th>Bệnh nhân</th><th>Lý do khám</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr><td>@(item.SoThuTu.HasValue ? item.SoThuTu.ToString() : "—")</td><td>@item.GioKham.ToString(@"hh\:mm")</td><td><strong>@item.BenhNhanName</strong><div class="small text-muted">@item.BenhNhanPhone</div></td><td>@(item.LyDoKham ?? "—")</td><td>@item.TrangThai</td><td><a href="@Url.Action("KhamBenh", new { appointmentId = item.MaLichHen })" class="btn btn-sm btn-outline-primary">Mở SOAP</a></td></tr>
+                    }
+                </tbody></table></div>
+            }
+            else
+            {
+                <div class="alert alert-info mb-0">Chưa có lịch hẹn được phân công cho bác sĩ. Hãy mở lịch hẹn và chọn một cuộc hẹn để bắt đầu khám.</div>
+                <a href="@Url.Action("LichHen")" class="btn btn-sm btn-outline-primary mt-2">Quay lại lịch hẹn</a>
+            }
+        </div>
+    }
+    else if (ViewBag.Destination != null)
+    {
+        <div class="dash-card-header"><h3 class="dash-card-title"><i class="fas fa-list-check"></i>Danh sách phiếu khám thuộc phạm vi bác sĩ</h3></div>
+        <div class="dash-card-body border-bottom">
+            @if (Model.ExaminationChoices.Any())
+            {
+                <h4 class="h6">Chọn phiếu khám (@(ViewBag.Destination == "KeDonThuoc" ? "mở kê đơn thuốc" : "mở chỉ định CLS"))</h4>
+                <div class="table-responsive"><table class="dash-table"><thead><tr><th>Mã phiếu</th><th>Bệnh nhân</th><th>Ngày khám</th><th>Chẩn đoán</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+                    @foreach (var exam in Model.ExaminationChoices)
+                    {
+                        <tr><td>@exam.ExaminationId</td><td>@exam.PatientName <span class="text-muted small">(#@exam.PatientId)</span></td><td>@exam.ExaminationDate.ToString("dd/MM/yyyy HH:mm")</td><td>@(exam.Diagnosis ?? "—")</td><td>@exam.Status</td><td>
+                            @if (ViewBag.Destination == "KeDonThuoc")
+                            {
+                                <a class="btn btn-sm btn-outline-primary" href="@Url.Action("KeDonThuoc", new { examinationId = exam.ExaminationId })">Mở kê đơn</a>
+                            }
+                            else
+                            {
+                                <a class="btn btn-sm btn-outline-primary" href="@Url.Action("ChiDinhCLS", new { examinationId = exam.ExaminationId })">Mở CLS</a>
+                            }
+                        </td></tr>
+                    }
+                </tbody></table></div>
+            }
+            else
+            {
+                <div class="alert alert-info mb-0">Chưa có phiếu khám đã lưu thuộc bác sĩ này. Hãy mở lịch hẹn, vào khám và lưu phiếu trước khi dùng CLS hoặc kê đơn.</div>
+                <a href="@Url.Action("LichHen")" class="btn btn-sm btn-outline-primary mt-2">Quay lại danh sách lịch hẹn</a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="row g-4 mb-4">
+            <div class="col-lg-3 col-md-6"><div class="stat-box"><div class="stat-box-icon blue"><i class="fas fa-calendar-check"></i></div><div><span class="stat-box-number">@Model.TotalAppointments</span><span class="stat-box-label">Lịch hẹn trong ngày</span></div></div></div>
+            <div class="col-lg-3 col-md-6"><div class="stat-box"><div class="stat-box-icon orange"><i class="fas fa-clock"></i></div><div><span class="stat-box-number">@Model.WaitingAppointments</span><span class="stat-box-label">Chờ khám</span></div></div></div>
+            <div class="col-lg-3 col-md-6"><div class="stat-box"><div class="stat-box-icon green"><i class="fas fa-circle-check"></i></div><div><span class="stat-box-number">@Model.CompletedAppointments</span><span class="stat-box-label">Đã khám</span></div></div></div>
+            <div class="col-lg-3 col-md-6"><div class="stat-box"><div class="stat-box-icon red"><i class="fas fa-user-xmark"></i></div><div><span class="stat-box-number">@Model.CancelledAppointments</span><span class="stat-box-label">Đã hủy</span></div></div></div>
+        </div>
+        <div class="dash-card-header"><h3 class="dash-card-title"><i class="fas fa-list-check"></i>Lịch hẹn ngày @Model.Date.ToString("dd/MM/yyyy")</h3></div>
+        <div class="dash-card-body">
+            <form method="get" class="row g-2 mb-3">
+                <div class="col-md-3"><input type="date" name="date" value="@Model.Date.ToString("yyyy-MM-dd")" class="form-control" /></div>
+                <div class="col-md-4"><input name="search" value="@Model.Search" class="form-control" placeholder="Tên, số điện thoại hoặc mã BN" /></div>
+                <div class="col-md-3"><select name="status" class="form-select"><option value="">Tất cả trạng thái</option><option value="Đã đặt">Đã đặt</option><option value="Đã khám">Đã khám</option><option value="Hủy">Hủy</option></select></div>
+                <div class="col-md-2"><button class="btn btn-primary w-100">Lọc</button></div>
+            </form>
+            <div class="table-responsive"><table class="dash-table"><thead><tr><th>STT</th><th>Giờ</th><th>Bệnh nhân</th><th>Lý do khám</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>
+                @if (Model.Items.Any())
+                {
+                    foreach (var item in Model.Items)
+                    {
+                        <tr><td>@(item.SoThuTu.HasValue ? item.SoThuTu.ToString() : "—")</td><td>@item.GioKham.ToString(@"hh\:mm")</td><td><strong>@item.BenhNhanName</strong><div class="small text-muted">@item.BenhNhanPhone</div></td><td>@(item.LyDoKham ?? "—")</td><td>@item.TrangThai</td><td>
+                            <a href="@Url.Action("KhamBenh", new { appointmentId = item.MaLichHen })" class="btn btn-sm btn-outline-primary">Vào khám</a>
+                            @if (item.TrangThai == "Đã đặt")
+                            {
+                                using (Html.BeginForm("CapNhatTrangThaiLichHen", "Doctor", FormMethod.Post, new { @class = "d-inline" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.MaLichHen" />
+                                    <input type="hidden" name="status" value="Hủy" />
+                                    <input type="hidden" name="returnUrl" value="@Url.Action("LichHen", new { date = Model.Date.ToString("yyyy-MM-dd"), search = Model.Search, status = Model.Status })" />
+                                    <button class="btn btn-sm btn-outline-danger ms-1">Hủy</button>
+                                }
+                            }
+                        </td></tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="6" class="text-center text-muted py-4">Không có lịch hẹn phù hợp.</td></tr>
+                }
+            </tbody></table></div>
+        </div>
+    }
+</div>

@@ -1,0 +1,23 @@
+@model MediCare.Models.MedicalRecordItemViewModel
+@{
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+@section SidebarNav {
+    @Html.Partial("_ClinicManagerSidebar")
+}
+<div class="dash-card">
+    <div class="dash-card-header"><h3 class="dash-card-title"><i class="fas fa-file-medical"></i> Chi tiết hồ sơ bệnh án</h3><a class="btn-dash btn-dash-outline" href="@Url.Action("HoSoBenhAn")">Quay lại</a></div>
+    <div class="dash-card-body">
+        <div class="row g-3">
+            <div class="col-md-6"><strong>Mã bệnh nhân:</strong> @Model.PatientCode</div>
+            <div class="col-md-6"><strong>Họ tên:</strong> @Model.PatientName</div>
+            <div class="col-md-6"><strong>Tuổi/Giới tính:</strong> @(Model.Age.HasValue ? Model.Age.Value + " tuổi" : "Chưa có") / @(Model.Gender ?? "Chưa có")</div>
+            <div class="col-md-6"><strong>Bác sĩ phụ trách:</strong> @Model.DoctorName</div>
+            <div class="col-md-6"><strong>Chuyên khoa:</strong> @(Model.DepartmentName ?? "Chưa có")</div>
+            <div class="col-md-6"><strong>Trạng thái:</strong> @Model.Status</div>
+            <div class="col-md-6"><strong>Ngày lập:</strong> @Model.CreatedDate.ToString("dd/MM/yyyy")</div>
+            <div class="col-md-6"><strong>Lần khám cuối:</strong> @Model.LastVisitDate.ToString("dd/MM/yyyy")</div>
+        </div>
+        <div class="mt-4"><a class="btn-dash btn-dash-primary" href="@Url.Action("LichSuKhamBenhNhan", new { id = Model.PatientId })"><i class="fas fa-history"></i> Xem lịch sử khám</a></div>
+    </div>
+</div>

@@ -1,0 +1,783 @@
+@model MediCare.Models.HomeIndexViewModel
+@{
+    ViewBag.Title = "Trang chủ";
+}
+
+<section id="home" class="hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <span class="badge" style="background: var(--mc-primary-light); color: var(--mc-primary-dark); padding: 0.45rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em;">
+                    <i class="fas fa-award me-1"></i> PHÒNG KHÁM UY TÍN HÀNG ĐẦU
+                </span>
+                <h1 class="mt-3 mb-4">Chăm sóc sức khỏe <span>toàn diện</span><br />với MediCare</h1>
+                <p class="lead-text">
+                    Hệ thống quản lý phòng khám đa khoa với đội ngũ bác sĩ chuyên gia,
+                    trang thiết bị hiện đại và dịch vụ khám chữa bệnh chất lượng cao.
+                    Đặt lịch trực tuyến nhanh chóng, hồ sơ bệnh án điện tử an toàn.
+                </p>
+                <div class="hero-actions">
+                    @if (User.Identity.IsAuthenticated && (User.IsInRole("Admin") || User.IsInRole("Admin hệ thống") || User.IsInRole("Quản lý phòng khám") || User.IsInRole("Bác sĩ")))
+                    {
+                        if (User.IsInRole("Admin") || User.IsInRole("Admin hệ thống"))
+                        {
+                            <a href="@Url.Action("Index", "Admin")" class="btn btn-warning px-5 py-3 rounded-pill shadow">
+                                <i class="fas fa-shield-halved me-2"></i>Vào Dashboard Admin
+                            </a>
+                        }
+                        else if (User.IsInRole("Quản lý phòng khám"))
+                        {
+                            <a href="@Url.Action("Index", "ClinicManager")" class="btn btn-success px-5 py-3 rounded-pill shadow">
+                                <i class="fas fa-briefcase-medical me-2"></i>Vào Dashboard Quản lý
+                            </a>
+                        }
+                        else if (User.IsInRole("Bác sĩ"))
+                        {
+                            <a href="@Url.Action("Index", "Doctor")" class="btn btn-info px-5 py-3 rounded-pill shadow text-white">
+                                <i class="fas fa-user-md me-2"></i>Vào Dashboard Bác sĩ
+                            </a>
+                        }
+                    }
+                    else
+                    {
+                        <a href="#appointment" class="btn btn-primary px-5 py-3 rounded-pill">
+                            <i class="fas fa-calendar-check me-2"></i>Đặt lịch khám ngay
+                        </a>
+                        <a href="#about" class="btn btn-outline-primary px-5 py-3 rounded-pill">
+                            <i class="fas fa-info-circle me-2"></i>Tìm hiểu thêm
+                        </a>
+                    }
+                </div>
+                <div class="hero-features">
+                    <div class="hero-feature"><i class="fas fa-check"></i> Đặt lịch 24/7</div>
+                    <div class="hero-feature"><i class="fas fa-check"></i> Bác sĩ chuyên gia</div>
+                    <div class="hero-feature"><i class="fas fa-check"></i> Hồ sơ điện tử</div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="hero-image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=900&q=80"
+                         alt="Đội ngũ bác sĩ MediCare" class="hero-image" />
+                    <div class="hero-badge hero-badge-top">
+                        <i class="fas fa-calendar-check"></i>
+                        <div>
+                            <small style="display:block; color: var(--mc-gray); font-size: 0.8rem;">Lượt khám/tháng</small>
+                            <strong style="color: var(--mc-dark);">12,500+</strong>
+                        </div>
+                    </div>
+                    <div class="hero-badge hero-badge-bottom">
+                        <i class="fas fa-user-md"></i>
+                        <div>
+                            <small style="display:block; color: var(--mc-gray); font-size: 0.8rem;">Bác sĩ chuyên khoa</small>
+                            <strong style="color: var(--mc-dark);">150+ Chuyên gia</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section scripts {
+    <script>
+        // @@ts-nocheck
+        $(document).ready(function () {
+            var initialDoctorId = $('#DoctorId').val() || '';
+
+            $('#DepartmentId').on('change', function () {
+                var deptId = $(this).val();
+                var $doctorSelect = $('#DoctorId');
+                var keepDoctor = initialDoctorId;
+
+                // Clear current options
+                $doctorSelect.empty();
+                $doctorSelect.append('<option value="">-- Đang tải bác sĩ... --</option>');
+
+                $.ajax({
+                    url: '@Url.Action("GetDoctorsByDepartment", "Home")',
+                    type: 'GET',
+                    data: { departmentId: deptId },
+                    success: function (data) {
+                        $doctorSelect.empty();
+                        $doctorSelect.append('<option value="">-- Bác sĩ bất kỳ --</option>');
+                        if (data && data.length > 0) {
+                            $.each(data, function (index, item) {
+                                $doctorSelect.append('<option value="' + item.id + '">' + item.name + '</option>');
+                            });
+                        }
+                        if (keepDoctor) { $doctorSelect.val(keepDoctor); }
+                    },
+                    error: function () {
+                        $doctorSelect.empty();
+                        $doctorSelect.append('<option value="">-- Bác sĩ bất kỳ --</option>');
+                        if (keepDoctor) { $doctorSelect.val(keepDoctor); }
+                    }
+                });
+            });
+
+            // Nếu đã có chuyên khoa được chọn (từ AI trợ lý hoặc sau khi submit lỗi), lọc lại danh sách bác sĩ
+            if ($('#DepartmentId').val()) {
+                $('#DepartmentId').trigger('change');
+            }
+        });
+    </script>
+}
+
+<section class="quick-stats pb-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-3 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-icon bg-1"><i class="fas fa-user-md"></i></div>
+                    <div class="stat-content">
+                        <strong>150+</strong>
+                        <span>Bác sĩ chuyên gia</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-icon bg-2"><i class="fas fa-procedures"></i></div>
+                    <div class="stat-content">
+                        <strong>250K+</strong>
+                        <span>Lượt khám/năm</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-icon bg-3"><i class="fas fa-clinic-medical"></i></div>
+                    <div class="stat-content">
+                        <strong>30+</strong>
+                        <span>Chuyên khoa</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-icon bg-4"><i class="fas fa-star"></i></div>
+                    <div class="stat-content">
+                        <strong>4.9/5</strong>
+                        <span>Đánh giá khách hàng</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="services" class="section">
+    <div class="container">
+        <div class="section-title">
+            <span class="badge"><i class="fas fa-list-check me-1"></i> Dịch vụ của chúng tôi</span>
+            <h2>Trải nghiệm dịch vụ <span>chất lượng cao</span></h2>
+            <p>Đầy đủ các dịch vụ y tế từ khám tổng quát đến chuyên khoa sâu, đáp ứng mọi nhu cầu chăm sóc sức khỏe của bạn và gia đình.</p>
+        </div>
+        <div class="row">
+            @if (Model.Services != null && Model.Services.Count > 0)
+            {
+                foreach (var svc in Model.Services)
+                {
+                    <div class="col-lg-4 col-md-6">
+                        <div class="service-card">
+                            <div class="service-icon"><i class="@svc.DisplayIcon"></i></div>
+                            <h3>@svc.Name</h3>
+                            @if (!string.IsNullOrWhiteSpace(svc.Description))
+                            {
+                                <p>@svc.Description</p>
+                            }
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong style="color: var(--mc-primary); font-size: 1.1rem;">@svc.DisplayPrice</strong>
+                                <a href="#appointment" class="service-link">Đặt lịch →</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12 text-center py-4" style="color: var(--mc-gray);">
+                    <i class="fas fa-list-check mb-2" style="font-size: 2rem;"></i>
+                    <p class="mb-0">Chưa có dịch vụ nào trong hệ thống.</p>
+                </div>
+            }
+        </div>
+
+        @if (Model.ServiceTotalPages > 1)
+        {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(Model.ServicePage <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="@(Url.Action("Index", new { servicePage = Model.ServicePage - 1, doctorPage = Model.DoctorPage }))#services">Trước</a>
+                    </li>
+                    @for (var p = 1; p <= Model.ServiceTotalPages; p++)
+                    {
+                        <li class="page-item @(p == Model.ServicePage ? "active" : "")">
+                            <a class="page-link" href="@(Url.Action("Index", new { servicePage = p, doctorPage = Model.DoctorPage }))#services">@p</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.ServicePage >= Model.ServiceTotalPages ? "disabled" : "")">
+                        <a class="page-link" href="@(Url.Action("Index", new { servicePage = Model.ServicePage + 1, doctorPage = Model.DoctorPage }))#services">Sau</a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    </div>
+</section>
+
+<section id="doctors" class="section section-alt">
+    <div class="container">
+        <div class="section-title">
+            <span class="badge"><i class="fas fa-user-doctor me-1"></i> Đội ngũ chuyên gia</span>
+            <h2>Gặp gỡ các <span>bác sĩ hàng đầu</span></h2>
+            <p>Đội ngũ y bác sĩ với hơn 10 năm kinh nghiệm, tốt nghiệp các trường đại học y danh tiếng trong và ngoài nước.</p>
+        </div>
+        <div class="row">
+            @if (Model.DoctorProfiles != null && Model.DoctorProfiles.Count > 0)
+            {
+                foreach (var doc in Model.DoctorProfiles)
+                {
+                    var doctorImage = string.IsNullOrWhiteSpace(doc.ImageUrl)
+                        ? "https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=professional%20portrait%20of%20a%20Vietnamese%20doctor%20wearing%20white%20coat%2C%20friendly%20smile%2C%20bright%20clinic%20background%2C%20realistic%20photo&image_size=portrait_4_3"
+                        : doc.ImageUrl;
+                    <div class="col-lg-3 col-md-6">
+                        <div class="doctor-card">
+                            <div class="doctor-img-wrap">
+                                <img src="@doctorImage" alt="@doc.FullName" />
+                                <div class="doctor-overlay">
+                                    <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                                    <a href="@doc.DisplayEmail" title="Email"><i class="fas fa-envelope"></i></a>
+                                    <a href="#appointment" title="Đặt lịch"><i class="fas fa-calendar-check"></i></a>
+                                </div>
+                            </div>
+                            <div class="doctor-info">
+                                <h4>@doc.FullName</h4>
+                                <span class="doctor-spec">@doc.DisplayDepartment</span>
+                                <div class="doctor-meta">
+                                    <span><i class="fas fa-star"></i> @doc.DisplayRating (@doc.DisplayReviewCount)</span>
+                                    <span><i class="fas fa-briefcase"></i> @doc.DisplayExperienceYears năm</span>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(doc.Description))
+                                {
+                                    <p style="color: var(--mc-gray); font-size: 0.88rem; text-align: left; margin-bottom: 1rem;">
+                                        @doc.Description
+                                    </p>
+                                }
+                                <a href="#appointment" class="btn btn-primary btn-sm rounded-pill px-4 w-100">Đặt lịch ngay</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12 text-center py-4" style="color: var(--mc-gray);">
+                    <i class="fas fa-user-doctor mb-2" style="font-size: 2rem;"></i>
+                    <p class="mb-0">Chưa có bác sĩ nào trong hệ thống.</p>
+                </div>
+            }
+        </div>
+
+        @if (Model.DoctorTotalPages > 1)
+        {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(Model.DoctorPage <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="@(Url.Action("Index", new { servicePage = Model.ServicePage, doctorPage = Model.DoctorPage - 1 }))#doctors">Trước</a>
+                    </li>
+                    @for (var p = 1; p <= Model.DoctorTotalPages; p++)
+                    {
+                        <li class="page-item @(p == Model.DoctorPage ? "active" : "")">
+                            <a class="page-link" href="@(Url.Action("Index", new { servicePage = Model.ServicePage, doctorPage = p }))#doctors">@p</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.DoctorPage >= Model.DoctorTotalPages ? "disabled" : "")">
+                        <a class="page-link" href="@(Url.Action("Index", new { servicePage = Model.ServicePage, doctorPage = Model.DoctorPage + 1 }))#doctors">Sau</a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    </div>
+</section>
+
+<section id="about" class="section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                <img src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=900&q=80"
+                     alt="Về MediCare" style="width: 100%; border-radius: var(--mc-radius-xl); box-shadow: var(--mc-shadow-lg);" />
+            </div>
+            <div class="col-lg-6 ps-lg-5">
+                <span class="badge" style="background: var(--mc-primary-light); color: var(--mc-primary-dark); font-weight: 600; padding: 0.4rem 1rem; border-radius: 999px;">
+                    <i class="fas fa-building me-1"></i> VỀ CHÚNG TÔI
+                </span>
+                <h2 class="mt-3 mb-4">MediCare - <span>Hệ thống y tế hàng đầu</span> Việt Nam</h2>
+                <p style="color: var(--mc-gray); margin-bottom: 1rem;">
+                    MediCare được thành lập vào năm 2010 với sứ mệnh mang đến dịch vụ y tế chất lượng cao,
+                    chi phí hợp lý cho mọi người dân. Sau hơn 15 năm hoạt động, chúng tôi đã trở thành một
+                    trong những hệ thống phòng khám đa khoa uy tín hàng đầu tại Việt Nam.
+                </p>
+                <p style="color: var(--mc-gray); margin-bottom: 1.5rem;">
+                    Với đội ngũ 150+ bác sĩ chuyên gia, hệ thống trang thiết bị y tế hiện đại được nhập khẩu
+                    từ Đức, Nhật Bản, cùng quy trình khám chữa bệnh theo tiêu chuẩn quốc tế, MediCare cam kết
+                    mang đến trải nghiệm chăm sóc sức khỏe tốt nhất cho bạn và gia đình.
+                </p>
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <div class="d-flex gap-2">
+                            <i class="fas fa-circle-check" style="color: var(--mc-secondary); margin-top: 3px;"></i>
+                            <div>
+                                <strong>Trang thiết bị hiện đại</strong>
+                                <p class="mb-0" style="color: var(--mc-gray); font-size: 0.88rem;">Đầu tư máy móc từ Đức, Nhật</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex gap-2">
+                            <i class="fas fa-circle-check" style="color: var(--mc-secondary); margin-top: 3px;"></i>
+                            <div>
+                                <strong>Chi phí hợp lý</strong>
+                                <p class="mb-0" style="color: var(--mc-gray); font-size: 0.88rem;">Minh bạch, chấp nhận BHYT</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex gap-2">
+                            <i class="fas fa-circle-check" style="color: var(--mc-secondary); margin-top: 3px;"></i>
+                            <div>
+                                <strong>Bảo mật thông tin</strong>
+                                <p class="mb-0" style="color: var(--mc-gray); font-size: 0.88rem;">Hồ sơ điện tử an toàn</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex gap-2">
+                            <i class="fas fa-circle-check" style="color: var(--mc-secondary); margin-top: 3px;"></i>
+                            <div>
+                                <strong>Hỗ trợ 24/7</strong>
+                                <p class="mb-0" style="color: var(--mc-gray); font-size: 0.88rem;">Tư vấn tận tình mọi lúc</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <a href="#contact" class="btn btn-primary px-5 py-3 rounded-pill">Liên hệ với chúng tôi</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="testimonials" class="section section-alt">
+    <div class="container">
+        <div class="section-title">
+            <span class="badge"><i class="fas fa-quote-left me-1"></i> ĐÁNH GIÁ TỪ KHÁCH HÀNG</span>
+            <h2>Khách hàng nói gì về <span>MediCare</span></h2>
+            <p>Hàng ngàn bệnh nhân đã tin tưởng và hài lòng với dịch vụ chăm sóc sức khỏe của MediCare.</p>
+        </div>
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <p>Dịch vụ khám rất chuyên nghiệp, bác sĩ tư vấn kỹ lưỡng và tận tâm. Mình đi khám thai ở BS Hương rất hài lòng, sẽ giới thiệu cho người thân.</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">NT</div>
+                        <div>
+                            <strong>Nguyễn Thu Trang</strong>
+                            <span>Khách hàng tại Quận 3</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <p>Mình đưa bé đi khám sốt, BS Lê rất nhẹ nhàng và hiểu rõ tâm lý trẻ em. Mọi thủ tục nhanh gọn, giá cả rõ ràng, không bị chờ đợi lâu.</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">VA</div>
+                        <div>
+                            <strong>Vũ Anh Tuấn</strong>
+                            <span>Phụ huynh tại Bình Thạnh</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                    </div>
+                    <p>Trang web đặt lịch rất tiện lợi, nhanh chóng, không phải mất thời gian xếp hàng tại phòng khám. Kết quả xét nghiệm nhận online rất nhanh.</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">LH</div>
+                        <div>
+                            <strong>Lê Hoàng Nam</strong>
+                            <span>Doanh nhân tại Quận 1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="appointment" class="section">
+    <div class="container">
+        <div class="section-title">
+            <span class="badge"><i class="fas fa-calendar-plus me-1"></i> ĐẶT LỊCH KHÁM</span>
+            <h2>Đặt lịch <span>trực tuyến</span> nhanh chóng</h2>
+            <p>Điền thông tin dưới đây để đặt lịch hẹn, chúng tôi sẽ liên hệ xác nhận trong thời gian sớm nhất.</p>
+        </div>
+
+        @if (TempData["AppointmentMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                <i class="fas fa-circle-check me-2"></i>@TempData["AppointmentMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["AppointmentError"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <i class="fas fa-triangle-exclamation me-2"></i>@TempData["AppointmentError"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="row g-5">
+            <div class="col-lg-8">
+                <div class="appointment-card">
+                    <div class="card-header">
+                        <h3 class="mb-0"><i class="fas fa-calendar-plus me-2"></i>Thông tin lịch hẹn</h3>
+                    </div>
+                    <div class="card-body">
+                        @using (Html.BeginForm("DatLichHen", "Home", FormMethod.Post))
+                        {
+                            @Html.AntiForgeryToken()
+                            <div class="step mb-4">
+                                <h5 class="mb-3">
+                                    <span class="badge rounded-pill me-2" style="background: var(--mc-gradient);">1</span>
+                                    Thông tin bệnh nhân
+                                </h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Họ và tên <span style="color: var(--mc-danger);">*</span></label>
+                                        @Html.TextBoxFor(m => m.FullName, new { @class = "form-control", placeholder = "Nhập họ và tên đầy đủ", required = "required" })
+                                        @Html.ValidationMessageFor(m => m.FullName, "", new { @class = "text-danger small d-block" })
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Số điện thoại <span style="color: var(--mc-danger);">*</span></label>
+                                        @Html.TextBoxFor(m => m.Phone, new { @class = "form-control", placeholder = "09xx xxx xxx", required = "required" })
+                                        @Html.ValidationMessageFor(m => m.Phone, "", new { @class = "text-danger small d-block" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4" />
+
+                            <div class="step mb-4">
+                                <h5 class="mb-3">
+                                    <span class="badge rounded-pill me-2" style="background: var(--mc-gradient);">2</span>
+                                    Thông tin khám
+                                </h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Chuyên khoa</label>
+                                        <select id="DepartmentId" name="DepartmentId" class="form-select">
+                                            <option value="">-- Chọn chuyên khoa --</option>
+                                            @if (Model != null && Model.Departments != null)
+                                            {
+                                                foreach (var dept in Model.Departments)
+                                                {
+                                                    <option value="@dept.MaKhoa" @(Model.DepartmentId == dept.MaKhoa ? "selected" : "")>@dept.TenKhoa</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Chọn bác sĩ (tùy chọn)</label>
+                                        <select id="DoctorId" name="DoctorId" class="form-select">
+                                            <option value="">-- Bác sĩ bất kỳ --</option>
+                                            @if (Model != null && Model.Doctors != null)
+                                            {
+                                                foreach (var doc in Model.Doctors)
+                                                {
+                                                    <option value="@doc.UserId" @(Model.DoctorId == doc.UserId ? "selected" : "")>@doc.FullName</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Ngày khám <span style="color: var(--mc-danger);">*</span></label>
+                                        <input type="date" name="ExaminationDate" min="@DateTime.Today.ToString("yyyy-MM-dd")" value="@Model.ExaminationDate.ToString("yyyy-MM-dd")" class="form-control" required />
+                                        @Html.ValidationMessage("ExaminationDate", "", new { @class = "text-danger small d-block" })
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Giờ khám <span style="color: var(--mc-danger);">*</span></label>
+                                        <select name="ExaminationTime" class="form-select" required>
+                                            @{
+                                                var timeSlots = new[] { "07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00" };
+                                                var selectedTime = string.IsNullOrWhiteSpace(Model.ExaminationTime) ? "08:30" : Model.ExaminationTime;
+                                            }
+                                            @foreach (var slot in timeSlots)
+                                            {
+                                                var endTime = DateTime.Today.Add(TimeSpan.Parse(slot)).AddMinutes(30).ToString("HH:mm");
+                                                <option value="@slot" @(slot == selectedTime ? "selected" : "")>@slot - @endTime</option>
+                                            }
+                                        </select>
+                                        @Html.ValidationMessage("ExaminationTime", "", new { @class = "text-danger small d-block" })
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Triệu chứng / Lý do khám</label>
+                                        @Html.TextAreaFor(m => m.Reason, new { @class = "form-control", rows = 3, placeholder = "Mô tả ngắn gọn triệu chứng nếu có hoặc các yêu cầu đặc biệt..." })
+                                        @Html.ValidationMessageFor(m => m.Reason, "", new { @class = "text-danger small d-block" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4" />
+
+                            <div class="form-check mb-4">
+                                <input class="form-check-input" type="checkbox" id="agree" required checked />
+                                <label class="form-check-label" for="agree">
+                                    Tôi đã đọc và đồng ý với Điều khoản dịch vụ và Chính sách bảo mật của MediCare.
+                                </label>
+                            </div>
+
+                            <div class="d-flex gap-3 flex-wrap">
+                                <button type="submit" class="btn btn-primary px-5 py-3 rounded-pill flex-grow-1 flex-md-grow-0">
+                                    <i class="fas fa-check-circle me-2"></i>Xác nhận đặt lịch
+                                </button>
+                                <button type="reset" class="btn btn-outline-secondary px-5 py-3 rounded-pill">
+                                    <i class="fas fa-rotate-left me-2"></i>Nhập lại
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="sticky-top" style="top: 6rem;">
+                    <div class="appointment-card mb-4">
+                        <div class="card-header">
+                            <h3 class="mb-0"><i class="fas fa-circle-info me-2"></i>Lưu ý quan trọng</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul style="padding-left: 1.25rem; margin-bottom: 0;">
+                                <li class="mb-2">Hệ thống sẽ gửi tin nhắn SMS xác nhận lịch hẹn đến số điện thoại của bạn trong 30 phút.</li>
+                                <li class="mb-2">Vui lòng đến trước 15 phút so với giờ khám đã đăng ký để làm thủ tục.</li>
+                                <li class="mb-2">Mang theo Giấy tờ tùy thân, thẻ BHYT (nếu có) và hồ sơ bệnh lý cũ (nếu có).</li>
+                                <li class="mb-2">Nếu cần hủy/dời lịch, vui lòng thông báo trước ít nhất 2 giờ qua hotline.</li>
+                                <li>Trẻ em dưới 16 tuổi phải có người lớn đi cùng.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="appointment-card mb-4">
+                        <div class="card-header">
+                            <h3 class="mb-0"><i class="fas fa-phone me-2"></i>Cần hỗ trợ?</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="info-card mb-3" style="border: none; padding: 0; box-shadow: none;">
+                                <div class="icon"><i class="fas fa-headset"></i></div>
+                                <div>
+                                    <h5>Hotline 24/7</h5>
+                                    <p><strong style="color: var(--mc-primary);">1900 1234</strong></p>
+                                </div>
+                            </div>
+                            <div class="info-card mb-3" style="border: none; padding: 0; box-shadow: none;">
+                                <div class="icon"><i class="fas fa-envelope"></i></div>
+                                <div>
+                                    <h5>Email hỗ trợ</h5>
+                                    <p>support@medicare.vn</p>
+                                </div>
+                            </div>
+                            <div class="info-card" style="border: none; padding: 0; box-shadow: none;">
+                                <div class="icon"><i class="fas fa-comment-dots"></i></div>
+                                <div>
+                                    <h5>Zalo / Fanpage</h5>
+                                    <p>Tìm "MediCare Official"</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="appointment-card">
+                        <div class="card-header">
+                            <h3 class="mb-0"><i class="fas fa-tags me-2"></i>Ưu đãi đặt lịch</h3>
+                        </div>
+                        <div class="card-body" style="background: linear-gradient(135deg, #fff7ed, #ecfdf5); border-radius: 0 0 var(--mc-radius-lg) var(--mc-radius-lg);">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span><i class="fas fa-gift me-2 text-warning"></i>Giảm 20%</span>
+                                <strong style="color: var(--mc-danger);">Hạn chế</strong>
+                            </div>
+                            <p class="mb-0" style="font-size: 0.88rem; color: var(--mc-slate-2);">
+                                Khách hàng mới đặt lịch online lần đầu được giảm ngay 20% chi phí khám.
+                                Chương trình áp dụng đến hết 30/09/2026.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="contact" class="section section-alt">
+    <div class="container">
+        <div class="section-title">
+            <span class="badge"><i class="fas fa-address-book me-1"></i> LIÊN HỆ</span>
+            <h2>Thông tin <span>liên hệ</span></h2>
+            <p>Liên hệ với chúng tôi để được hỗ trợ nhanh chóng và tận tình.</p>
+        </div>
+
+        @if (TempData["ContactMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                <i class="fas fa-circle-check me-2"></i>@TempData["ContactMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["ContactError"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <i class="fas fa-triangle-exclamation me-2"></i>@TempData["ContactError"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="row g-4 mb-5">
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card">
+                    <div class="icon"><i class="fas fa-map-marker-alt"></i></div>
+                    <div>
+                        <h5>Địa chỉ</h5>
+                        <p>123 Đường 2/4, Phường 6<br />Quận 3, TP. Hồ Chí Minh</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card">
+                    <div class="icon"><i class="fas fa-phone-volume"></i></div>
+                    <div>
+                        <h5>Điện thoại</h5>
+                        <p>Hotline: 1900 1234<br />Fax: (028) 3812 3456</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="info-card">
+                    <div class="icon"><i class="fas fa-envelope-open"></i></div>
+                    <div>
+                        <h5>Email</h5>
+                        <p>info@medicare.vn<br />support@medicare.vn</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="appointment-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-comment-medical me-2"></i>Gửi tin nhắn cho chúng tôi</h3>
+                    </div>
+                    <div class="card-body">
+                        @using (Html.BeginForm("GuiTinNhanLienHe", "Home", FormMethod.Post))
+                        {
+                            @Html.AntiForgeryToken()
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Họ và tên <span style="color: var(--mc-danger);">*</span></label>
+                                    <input type="text" name="HoTen" class="form-control" placeholder="Nhập họ và tên" required />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Số điện thoại <span style="color: var(--mc-danger);">*</span></label>
+                                    <input type="tel" name="SoDienThoai" class="form-control" placeholder="09xx xxx xxx" required />
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" name="Email" class="form-control" placeholder="example@gmail.com" />
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Tiêu đề <span style="color: var(--mc-danger);">*</span></label>
+                                    <input type="text" name="TieuDe" class="form-control" placeholder="Tiêu đề tin nhắn" required />
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Nội dung tin nhắn <span style="color: var(--mc-danger);">*</span></label>
+                                    <textarea name="NoiDung" class="form-control" placeholder="Nhập nội dung bạn muốn gửi..." required></textarea>
+                                </div>
+                                <div class="col-md-12">
+                                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold">
+                                        <i class="fas fa-paper-plane me-2"></i>Gửi tin nhắn
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="appointment-card h-100">
+                    <div class="card-header">
+                        <h3><i class="fas fa-location-dot me-2"></i>Bản đồ & Giờ làm việc</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <iframe
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.489899110327!2d106.6855023147391!3d10.776195892296175!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f055c12f12f%3A0xa16fa3bd6abf0e19!2sDistrict%203%2C%20Ho%20Chi%20Minh%20City!5e0!3m2!1sen!2s!4v1715000000000!5m2!1sen!2s"
+                            width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                        <div class="p-4">
+                            <h5 class="mb-3"><i class="fas fa-clock text-primary me-2"></i>Giờ làm việc</h5>
+                            <table class="table table-borderless mb-0">
+                                <tbody>
+                                    <tr><td style="width: 180px;">Thứ 2 - Thứ 6</td><td style="color: var(--mc-dark); font-weight: 600;">06:30 - 22:00</td></tr>
+                                    <tr><td>Thứ 7</td><td style="color: var(--mc-dark); font-weight: 600;">07:00 - 21:00</td></tr>
+                                    <tr><td>Chủ nhật</td><td style="color: var(--mc-dark); font-weight: 600;">07:00 - 20:00</td></tr>
+                                    <tr><td>Ngày lễ</td><td style="color: var(--mc-secondary); font-weight: 600;"><i class="fas fa-circle-check me-1"></i> Mở cửa bình thường</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section pb-0" style="padding-bottom: 5rem !important;">
+    <div class="container">
+        <div class="cta-section">
+            <div class="container">
+                <div class="row align-items-center justify-content-between">
+                    <div class="col-lg-7 mb-4 mb-lg-0">
+                        <h2>Đừng chần chừ, hãy bảo vệ sức khỏe của bạn <span style="font-weight: 400;">hôm nay</span></h2>
+                        <p class="mb-0 opacity-9">Đặt lịch hẹn ngay để nhận được chương trình ưu đãi đặc biệt dành cho khách hàng mới!</p>
+                    </div>
+                    <div class="col-lg-5 text-lg-end">
+                        <div class="d-flex gap-2 flex-wrap justify-content-lg-end">
+                            <a href="tel:19001234" class="cta-btn">
+                                <i class="fas fa-phone-alt"></i> 1900 1234
+                            </a>
+                            @if (!User.Identity.IsAuthenticated || (!User.IsInRole("Admin") && !User.IsInRole("Admin hệ thống") && !User.IsInRole("Bác sĩ") && !User.IsInRole("Quản lý phòng khám")))
+                            {
+                                <a href="#appointment" class="cta-btn" style="background: var(--mc-dark); color: #fff !important;">
+                                    <i class="fas fa-calendar-check me-2"></i>Đặt lịch ngay
+                                </a>
+                            }
+                            else
+                            {
+                                <a href="@(User.IsInRole("Admin") || User.IsInRole("Admin hệ thống") ? Url.Action("Index", "Admin") : (User.IsInRole("Bác sĩ") ? Url.Action("Index", "Doctor") : Url.Action("Index", "ClinicManager")))" class="cta-btn" style="background: var(--mc-dark); color: #fff !important;">
+                                    <i class="fas fa-gauge-high me-2"></i>Vào Dashboard của bạn
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

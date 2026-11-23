@@ -1,0 +1,112 @@
+@model MediCare.Models.AuditLogSearchViewModel
+@{
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarNav {
+    @Html.Partial("~/Views/Shared/_AdminSidebar.cshtml")
+}
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4"><i class="fas fa-triangle-exclamation me-2"></i>@ViewBag.Error</div>
+}
+
+<!-- Audit Log Card -->
+<div class="dash-card">
+    <div class="dash-card-header d-flex justify-content-between align-items-center">
+        <h3 class="dash-card-title mb-0">
+            <i class="fas fa-scroll text-primary me-2"></i>
+            Nhật ký Hoạt động Hệ thống (System Audit Trail Log từ CSDL)
+        </h3>
+        <a href="@Url.Action("XuatLogCsv", "Admin", new { search = Model.Search, actionType = Model.ActionType, fromDate = Model.FromDate?.ToString("yyyy-MM-dd"), toDate = Model.ToDate?.ToString("yyyy-MM-dd") })" class="btn btn-outline-success btn-sm fw-semibold">
+            <i class="fas fa-file-csv me-1"></i> Xuất Log CSV
+        </a>
+    </div>
+
+    <div class="dash-card-body p-0">
+        <div class="p-3 bg-light border-bottom">
+            @using (Html.BeginForm("NhatKyHoatDong", "Admin", FormMethod.Get))
+            {
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-4">
+                        <div class="search-input-wrap">
+                            <i class="fas fa-search"></i>
+                            <input type="text" name="search" class="form-control form-control-sm" value="@Model.Search" placeholder="Tìm theo tên user, hành động, IP..." />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="actionType" class="form-select form-select-sm">
+                            <option value="">-- Tất cả hành động --</option>
+                            <option value="LOGIN" @(Model.ActionType == "LOGIN" ? "selected" : "")>LOGIN</option>
+                            <option value="LOGOUT" @(Model.ActionType == "LOGOUT" ? "selected" : "")>LOGOUT</option>
+                            <option value="FAILED_LOGIN" @(Model.ActionType == "FAILED_LOGIN" ? "selected" : "")>FAILED_LOGIN</option>
+                            <option value="REQUIRE_2FA" @(Model.ActionType == "REQUIRE_2FA" ? "selected" : "")>REQUIRE_2FA</option>
+                            <option value="LOGIN_2FA" @(Model.ActionType == "LOGIN_2FA" ? "selected" : "")>LOGIN_2FA</option>
+                            <option value="FAILED_2FA" @(Model.ActionType == "FAILED_2FA" ? "selected" : "")>FAILED_2FA</option>
+                            <option value="ENABLE_2FA" @(Model.ActionType == "ENABLE_2FA" ? "selected" : "")>ENABLE_2FA</option>
+                            <option value="DISABLE_2FA" @(Model.ActionType == "DISABLE_2FA" ? "selected" : "")>DISABLE_2FA</option>
+                            <option value="CREATE" @(Model.ActionType == "CREATE" ? "selected" : "")>CREATE</option>
+                            <option value="UPDATE" @(Model.ActionType == "UPDATE" ? "selected" : "")>UPDATE</option>
+                            <option value="DELETE" @(Model.ActionType == "DELETE" ? "selected" : "")>DELETE</option>
+                            <option value="BACKUP" @(Model.ActionType == "BACKUP" ? "selected" : "")>BACKUP</option>
+                            <option value="DOWNLOAD_BACKUP" @(Model.ActionType == "DOWNLOAD_BACKUP" ? "selected" : "")>DOWNLOAD_BACKUP</option>
+                            <option value="VERIFY_RESTORE" @(Model.ActionType == "VERIFY_RESTORE" ? "selected" : "")>VERIFY_RESTORE</option>
+                            <option value="UNLOCK_IP" @(Model.ActionType == "UNLOCK_IP" ? "selected" : "")>UNLOCK_IP</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" name="fromDate" class="form-control form-control-sm" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" />
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" name="toDate" class="form-control form-control-sm" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" />
+                    </div>
+                    <div class="col-md-1">
+                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">Lọc</button>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="table-responsive">
+            <table class="dash-table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th>Thời gian</th>
+                        <th>Người thực hiện</th>
+                        <th>Vai trò</th>
+                        <th>Hành động</th>
+                        <th>Đối tượng</th>
+                        <th>IP</th>
+                        <th>Kết quả & Chi tiết</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Items != null && Model.Items.Count > 0)
+                    {
+                        foreach (var log in Model.Items)
+                        {
+                            <tr>
+                                <td class="small fw-bold">@log.ThoiGian.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                <td><strong>@log.NguoiThucHien</strong></td>
+                                <td><span class="badge bg-secondary">@log.VaiTro</span></td>
+                                <td><span class="badge-pill @(log.HanhDong == "LOGIN" ? "badge-success" : log.HanhDong == "FAILED_LOGIN" ? "badge-danger" : "badge-primary")">@log.HanhDong</span></td>
+                                <td>@log.DoiTuong</td>
+                                <td class="small font-monospace text-muted">@log.IpAddress</td>
+                                <td class="@(log.KetQua == "Thành công" ? "text-success" : "text-danger") fw-semibold">
+                                    @log.KetQua: @log.ChiTiet
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">Chưa có nhật ký hoạt động nào ghi nhận trong khoảng thời gian này.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,26 @@
+@model MediCare.Models.UserEditViewModel
+@{
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    ViewBag.Title = "Thêm tài khoản";
+    ViewBag.PageTitle = "Thêm tài khoản";
+}
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <div>
+                <h2 class="mb-1">Thêm tài khoản</h2>
+                <p class="text-muted mb-0">Tạo tài khoản mới theo vai trò và phòng ban của hệ thống.</p>
+            </div>
+            <a href="@Url.Action("QuanLyTaiKhoan", "ClinicManager")" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Quay lại danh sách
+            </a>
+        </div>
+
+        @Html.Partial("_FormTaiKhoan", Model)
+    </div>
+</div>
+
+@section SidebarNav {
+    @Html.Partial("_ClinicManagerSidebar")
+}

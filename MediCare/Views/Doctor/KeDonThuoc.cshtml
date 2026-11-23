@@ -1,0 +1,274 @@
+@model MediCare.Models.DoctorPrescriptionViewModel
+@{ Layout = "~/Views/Shared/_DashboardLayout.cshtml"; }
+@section SidebarNav {
+    @Html.Partial("~/Views/Shared/_DoctorSidebar.cshtml")
+}
+
+@if (TempData["Message"] != null) {
+    <div class="alert alert-info alert-dismissible fade show mb-4"><i class="fas fa-info-circle me-2"></i>@TempData["Message"]</div>
+}
+
+@if (Model.ExaminationId == 0) {
+    <div class="alert alert-info">@(ViewBag.InvalidExaminationId == true ? "Mã phiếu khám không hợp lệ." : "Vui lòng mở kê đơn từ một phiếu khám hợp lệ của bác sĩ.")</div>
+    <a class="btn btn-primary" href="@Url.Action("PhieuKham", new { destination = "KeDonThuoc" })">Chọn phiếu khám</a>
+    <a class="btn btn-outline-secondary ms-2" href="@Url.Action("LichHen")">Quay lại lịch hẹn</a>
+} else {
+    <div class="patient-info-card mb-4 p-3 bg-light rounded border d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="text-dark mb-1">@Model.PatientName</h3>
+            <div class="text-muted small">Mã phiếu khám: <strong>#@Model.ExaminationId</strong></div>
+        </div>
+        <div>
+            <a href="@Url.Action("KhamBenh", new { appointmentId = Model.AppointmentId ?? Model.ExaminationId })" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-arrow-left me-1"></i>Quay lại phiếu khám
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        @if (Model.HasPrescription) {
+            <!-- Phiếu khám đã có đơn thuốc: không cho kê thêm để tránh trùng lặp -->
+            <div class="col-lg-7">
+                <div class="dash-card">
+                    <div class="dash-card-header"><h3 class="dash-card-title"><i class="fas fa-circle-info me-2"></i>Kê đơn thuốc mới</h3></div>
+                    <div class="dash-card-body">
+                        <div class="alert alert-info mb-0">
+                            Phiếu khám này đã có đơn thuốc <strong>#@Model.PrescriptionId</strong>. Hệ thống không cho phép kê thêm đơn mới để tránh trùng lặp chi phí thuốc.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        } else {
+        <!-- Form Kê đơn thuốc mới -->
+        <div class="col-lg-7">
+            <div class="dash-card">
+                <div class="dash-card-header"><h3 class="dash-card-title"><i class="fas fa-prescription-bottle-medical me-2"></i>Kê đơn thuốc mới</h3></div>
+                <div class="dash-card-body">
+                    @using (Html.BeginForm("KeDonThuoc", "Doctor", FormMethod.Post, new { id = "prescriptionForm" })) {
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ExaminationId" value="@Model.ExaminationId" />
+
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold"><i class="fas fa-magnifying-glass me-1"></i>Tra cứu thuốc</label>
+                            <div class="input-group">
+                                <input type="text" id="medicineSearch" class="form-control" placeholder="Nhập tên thuốc hoặc hoạt chất..." value="@Model.MedicineSearch" />
+                                <button type="button" class="btn btn-outline-primary" id="btnSearchMedicine"><i class="fas fa-search me-1"></i>Tìm</button>
+                            </div>
+                        </div>
+                        <div id="medicineCatalog" data-exam-id="@Model.ExaminationId">
+                            @Html.Partial("~/Views/Doctor/_KeDonThuocThuocList.cshtml", Model)
+                        </div>
+
+                        <hr />
+
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0 fw-semibold"><i class="fas fa-cart-plus me-1"></i>Thuốc trong đơn</h6>
+                            <span class="badge bg-primary" id="selectedCount">0</span>
+                        </div>
+                        <div id="selectedEmpty" class="text-muted small py-3 text-center border rounded">
+                            Chưa chọn thuốc nào. Nếu phiếu khám không cần dùng thuốc, bạn vẫn có thể lưu đơn thuốc trống.
+                        </div>
+                        <div class="table-responsive" id="selectedWrapper" style="display:none;">
+                            <table class="table table-sm align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Tên thuốc</th>
+                                        <th style="width: 90px;">Số lượng</th>
+                                        <th style="width: 200px;">Liều dùng / Cách dùng</th>
+                                        <th style="width: 50px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="selectedBody"></tbody>
+                            </table>
+                        </div>
+
+                        <button type="submit" class="btn btn-success px-4 py-2 mt-3">
+                            <i class="fas fa-check-circle me-1"></i>Lưu đơn thuốc
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+        }
+
+        <!-- Đơn thuốc đã lưu -->
+        <div class="col-lg-5">
+            <div class="dash-card">
+                <div class="dash-card-header"><h3 class="dash-card-title"><i class="fas fa-file-prescription me-2"></i>Đơn thuốc đã lưu</h3></div>
+                <div class="dash-card-body">
+                    @if (!Model.HasPrescription) {
+                        <div class="text-muted py-4 text-center">Chưa có đơn thuốc cho phiếu khám này.</div>
+                    } else {
+                        <div class="mb-3 p-2 bg-light rounded d-flex justify-content-between align-items-center">
+                            <span>Mã đơn thuốc: <strong>#@Model.PrescriptionId</strong></span>
+                            <span class="badge bg-success">Đã lưu</span>
+                        </div>
+                        if (Model.Items.Count == 0) {
+                            <div class="alert alert-info mb-3">Đơn thuốc không kê thuốc (không dùng thuốc cho phiếu khám này).</div>
+                        } else {
+                        <div class="table-responsive mb-3">
+                            <table class="dash-table">
+                                <thead>
+                                    <tr>
+                                        <th>Thuốc</th>
+                                        <th>SL</th>
+                                        <th>Cách dùng</th>
+                                        <th>Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.Items) {
+                                        <tr>
+                                            <td><strong>@item.MedicineName</strong></td>
+                                            <td>@item.Quantity</td>
+                                            <td><small class="text-muted">@(item.Instructions ?? "Theo chỉ định")</small></td>
+                                            <td>@item.Amount.ToString("N0") đ</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="3" class="text-end">Tổng tiền thuốc:</th>
+                                        <th class="text-primary">@Model.Total.ToString("N0") đ</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        }
+
+                        <div class="mt-3">
+                            <a href="@Url.Action("ThanhToan", "Doctor", new { examinationId = Model.ExaminationId })" class="btn btn-primary w-100 py-2">
+                                <i class="fas fa-file-invoice-dollar me-2"></i>Tạo hóa đơn và thanh toán
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section scripts {
+    if (!Model.HasPrescription && Model.ExaminationId != 0) {
+    <script>
+        (function () {
+            var listUrl = '@Url.Action("KeDonThuocThuocList", "Doctor")';
+            var examId = @Model.ExaminationId;
+            var selected = []; // { id, name, unit, price, stock, qty, instructions }
+
+            function escapeHtml(value) {
+                return String(value == null ? '' : value)
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            }
+
+            function formatMoney(value) {
+                var n = Number(value) || 0;
+                return n.toLocaleString('vi-VN') + ' đ';
+            }
+
+            function loadMedicines(page) {
+                var search = $('#medicineSearch').val();
+                $.ajax({
+                    url: listUrl,
+                    type: 'GET',
+                    data: { examinationId: examId, search: search, page: page || 1 },
+                    success: function (html) { $('#medicineCatalog').html(html); },
+                    error: function () { $('#medicineCatalog').html('<div class="alert alert-danger mb-0">Không tải được danh mục thuốc.</div>'); }
+                });
+            }
+
+            function renderSelected() {
+                var $body = $('#selectedBody');
+                $body.empty();
+
+                if (selected.length === 0) {
+                    $('#selectedEmpty').show();
+                    $('#selectedWrapper').hide();
+                } else {
+                    $('#selectedEmpty').hide();
+                    $('#selectedWrapper').show();
+                    selected.forEach(function (item, index) {
+                        var row = ''
+                            + '<tr>'
+                            + '  <td><strong>' + escapeHtml(item.name) + '</strong>'
+                            + '      <div class="small text-muted">' + formatMoney(item.price) + ' / ' + escapeHtml(item.unit || '') + '</div>'
+                            + '      <input type="hidden" name="Items[' + index + '].MedicineId" value="' + item.id + '" />'
+                            + '  </td>'
+                            + '  <td><input type="number" name="Items[' + index + '].Quantity" class="form-control form-control-sm js-qty" min="1" max="' + item.stock + '" value="' + item.qty + '" data-id="' + item.id + '" /></td>'
+                            + '  <td><input type="text" name="Items[' + index + '].Instructions" class="form-control form-control-sm js-instructions" placeholder="Sáng 1, tối 1 sau ăn..." value="' + escapeHtml(item.instructions || '') + '" data-id="' + item.id + '" maxlength="255" /></td>'
+                            + '  <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger js-remove-med" data-id="' + item.id + '"><i class="fas fa-times"></i></button></td>'
+                            + '</tr>';
+                        $body.append(row);
+                    });
+                }
+                $('#selectedCount').text(selected.length);
+            }
+
+            function findItem(id) {
+                for (var i = 0; i < selected.length; i++) {
+                    if (String(selected[i].id) === String(id)) return selected[i];
+                }
+                return null;
+            }
+
+            $('#btnSearchMedicine').on('click', function () { loadMedicines(1); });
+            $('#medicineSearch').on('keydown', function (e) {
+                if (e.which === 13) { e.preventDefault(); loadMedicines(1); }
+            });
+
+            $('#medicineCatalog').on('click', '.js-med-page', function (e) {
+                e.preventDefault();
+                if ($(this).closest('.page-item').hasClass('disabled')) return;
+                loadMedicines(parseInt($(this).data('page'), 10));
+            });
+
+            $('#medicineCatalog').on('click', '.js-add-med', function () {
+                var $btn = $(this);
+                var id = $btn.data('id');
+                var existing = findItem(id);
+                if (existing) {
+                    if (existing.qty < existing.stock) existing.qty += 1;
+                    renderSelected();
+                    return;
+                }
+                selected.push({
+                    id: id,
+                    name: $btn.data('name'),
+                    unit: $btn.data('unit'),
+                    price: $btn.data('price'),
+                    stock: parseInt($btn.data('stock'), 10) || 0,
+                    qty: 1,
+                    instructions: ''
+                });
+                renderSelected();
+            });
+
+            $('#selectedBody').on('input', '.js-qty', function () {
+                var item = findItem($(this).data('id'));
+                if (!item) return;
+                var val = parseInt($(this).val(), 10);
+                if (isNaN(val) || val < 1) val = 1;
+                if (val > item.stock) {
+                    val = item.stock;
+                    $(this).val(val);
+                }
+                item.qty = val;
+            });
+
+            $('#selectedBody').on('input', '.js-instructions', function () {
+                var item = findItem($(this).data('id'));
+                if (item) item.instructions = $(this).val();
+            });
+
+            $('#selectedBody').on('click', '.js-remove-med', function () {
+                var id = $(this).data('id');
+                selected = selected.filter(function (x) { return String(x.id) !== String(id); });
+                renderSelected();
+            });
+
+            renderSelected();
+        })();
+    </script>
+    }
+}

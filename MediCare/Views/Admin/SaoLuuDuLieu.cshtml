@@ -1,0 +1,94 @@
+@model MediCare.Models.BackupManagementViewModel
+@{
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section SidebarNav {
+    @Html.Partial("~/Views/Shared/_AdminSidebar.cshtml")
+}
+
+@if (TempData["BackupMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4"><i class="fas fa-circle-check me-2"></i>@TempData["BackupMessage"]</div>
+}
+@if (TempData["BackupError"] != null || ViewBag.Error != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4"><i class="fas fa-triangle-exclamation me-2"></i>@(TempData["BackupError"] ?? ViewBag.Error)</div>
+}
+
+<!-- Backup Card -->
+<div class="dash-card">
+    <div class="dash-card-header d-flex justify-content-between align-items-center">
+        <h3 class="dash-card-title mb-0">
+            <i class="fas fa-database text-primary me-2"></i>
+            Quản lý Sao lưu & Phục hồi Cơ sở Dữ liệu (Backup & Disaster Recovery)
+        </h3>
+        @using (Html.BeginForm("TaoBackup", "Admin", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-primary btn-sm fw-bold">
+                <i class="fas fa-cloud-arrow-up me-1"></i> Tạo bản Sao lưu tức thì
+            </button>
+        }
+    </div>
+
+    <div class="dash-card-body p-0">
+        <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+            <span class="small text-muted"><i class="fas fa-circle-check text-success me-1"></i>Thư mục lưu trữ: <strong>@Model?.BackupDirectory</strong></span>
+            <span class="badge bg-success">Trạng thái: Sẵn sàng</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="dash-table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th>Tên bản Backup</th>
+                        <th>Thời gian tạo</th>
+                        <th>Dung lượng</th>
+                        <th>Loại sao lưu</th>
+                        <th class="text-center">Trạng thái tệp</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Backups != null && Model.Backups.Count > 0)
+                    {
+                        foreach (var b in Model.Backups)
+                        {
+                            <tr>
+                                <td><strong class="text-dark">@b.FileName</strong></td>
+                                <td class="small">@b.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                <td class="fw-bold text-primary">@((b.FileSize / (1024.0 * 1024.0)).ToString("N2")) MB</td>
+                                <td><span class="badge bg-primary">@b.BackupType</span></td>
+                                <td class="text-center">
+                                    <span class="badge-pill @(b.IsVerified ? "badge-success" : "badge-warning")">
+                                        @(b.IsVerified ? "Đã xác minh" : "Chưa xác minh")
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <a href="@Url.Action("TaiBackup", "Admin", new { fileName = b.FileName })" class="btn btn-sm btn-outline-primary me-1">
+                                        <i class="fas fa-download me-1"></i>Tải
+                                    </a>
+                                    @using (Html.BeginForm("RestoreBackup", "Admin", FormMethod.Post, new { @class = "d-inline" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        @Html.Hidden("fileName", b.FileName)
+                                        <button type="submit" class="btn btn-sm btn-outline-warning" onclick="return confirm('Xác minh và kiểm tra bản backup @b.FileName?');">
+                                            <i class="fas fa-rotate-left me-1"></i>Xác minh Restore
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">Chưa có bản sao lưu .bak nào được tạo trong hệ thống.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
